@@ -1,0 +1,10 @@
+*.png
+*.pyc
+*.mat
+*.o
+*.log
+*.cmake
+Makefile
+CMakeCache.txt
+CMakeFiles/*
+ITKIOFactoryRegistration/*
