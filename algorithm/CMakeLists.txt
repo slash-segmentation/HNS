@@ -19,38 +19,38 @@ link_directories(${GMP_LIB_DIR})
 
 include_directories(.)
 
-add_executable(genTextonDict 
+add_executable(hnsGenTextonDict 
   gadget/main_genTextonDict.cxx
   util/struct_util.cxx 
   util/cv/cv_texton.cxx
   util/cv/cv_textond.cxx
   util/ml/ml_kmeans.cxx 
   struct/point.cxx)
-target_link_libraries(genTextonDict 
+target_link_libraries(hnsGenTextonDict 
   ${ITK_LIBRARIES})
 
-add_executable(watershed 
+add_executable(hnsWatershed 
   gadget/main_watershed.cxx)
-target_link_libraries(watershed 
+target_link_libraries(hnsWatershed 
   ${ITK_LIBRARIES})
 
-add_executable(merge 
+add_executable(hnsMerge 
   tree2d/main_merge.cxx 
   tree2d/tree2d_util.cxx 
   util/struct_util.cxx 
   struct/point.cxx)
-target_link_libraries(merge 
+target_link_libraries(hnsMerge 
   ${ITK_LIBRARIES})
 
-add_executable(genMerges
+add_executable(hnsGenMerges
   tree2d/main_genMerges.cxx
   tree2d/tree2d_util.cxx
   util/struct_util.cxx 
   struct/point.cxx)
-target_link_libraries(genMerges 
+target_link_libraries(hnsGenMerges 
   ${ITK_LIBRARIES})
 
-add_executable(genBoundaryFeatures
+add_executable(hnsGenBoundaryFeatures
   tree2d/main_genBoundaryFeatures.cxx
   tree2d/bc.cxx
   tree2d/tree2d_util.cxx
@@ -58,45 +58,45 @@ add_executable(genBoundaryFeatures
   util/cv/cv_hist.cxx
   util/cv/cv_texton.cxx
   struct/point.cxx)
-target_link_libraries(genBoundaryFeatures 
+target_link_libraries(hnsGenBoundaryFeatures 
   ${ITK_LIBRARIES})
 
-add_executable(genBoundaryLabels
+add_executable(hnsGenBoundaryLabels
   tree2d/main_genBoundaryLabels.cxx
   tree2d/tree2d_util.cxx
   util/metric/metric_pairf.cxx
   util/metric/metric_util.cxx
   util/struct_util.cxx 
   struct/point.cxx)
-target_link_libraries(genBoundaryLabels
+target_link_libraries(hnsGenBoundaryLabels
   gmp gmpxx
   ${ITK_LIBRARIES})
 
-add_executable(segment 
+add_executable(hnsSegment 
   tree2d/main_segment.cxx 
   tree2d/tree2d_util.cxx
   util/struct_util.cxx
   struct/point.cxx)
-target_link_libraries(segment 
+target_link_libraries(hnsSegment 
   ${ITK_LIBRARIES})
 
-add_executable(genOrderedContours 
+add_executable(hnsGenOrderedContours 
   gadget/main_genOrderedContours.cxx 
   util/struct_util.cxx 
   util/cv/cv_contour.cxx
   struct/point.cxx)
-target_link_libraries(genOrderedContours
+target_link_libraries(hnsGenOrderedContours
   ${ITK_LIBRARIES} 
   ${OpenCV_LIBS})
 
-add_executable(genRegionPairs 
+add_executable(hnsGenRegionPairs 
   link3d/main_genRegionPairs.cxx 
   util/struct_util.cxx
   struct/point.cxx)
-target_link_libraries(genRegionPairs 
+target_link_libraries(hnsGenRegionPairs 
   ${ITK_LIBRARIES})
 
-add_executable(genRegionStats 
+add_executable(hnsGenRegionStats 
   link3d/main_genRegionStats.cxx 
   link3d/link3d_io.cxx
   link3d/rs.cxx
@@ -105,11 +105,11 @@ add_executable(genRegionStats
   util/cv/cv_contour.cxx
   util/cv/cv_curve.cxx
   struct/point.cxx)
-target_link_libraries(genRegionStats 
+target_link_libraries(hnsGenRegionStats 
   ${ITK_LIBRARIES} 
   ${OpenCV_LIBS})
 
-add_executable(genSectionFeatures 
+add_executable(hnsGenSectionFeatures 
   link3d/main_genSectionFeatures.cxx 
   link3d/link3d_io.cxx
   link3d/sc.cxx
@@ -117,24 +117,24 @@ add_executable(genSectionFeatures
   util/io_util.cxx
   util/struct_util.cxx 
   struct/point.cxx)
-target_link_libraries(genSectionFeatures 
+target_link_libraries(hnsGenSectionFeatures 
   ${ITK_LIBRARIES} 
   ${OpenCV_LIBS})
 
-add_executable(genSectionLabels 
+add_executable(hnsGenSectionLabels 
   link3d/main_genSectionLabels.cxx 
   link3d/link3d_io.cxx
   util/io_util.cxx
   util/struct_util.cxx
   struct/point.cxx)
-target_link_libraries(genSectionLabels 
+target_link_libraries(hnsGenSectionLabels 
   ${ITK_LIBRARIES})
 
-add_executable(threshold 
+add_executable(hnsThreshold 
   link3d/main_threshold.cxx 
   link3d/link3d_io.cxx 
   util/io_util.cxx 
   util/struct_util.cxx 
   struct/point.cxx)
-target_link_libraries(threshold 
+target_link_libraries(hnsThreshold 
   ${ITK_LIBRARIES})
