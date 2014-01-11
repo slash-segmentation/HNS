@@ -3,6 +3,8 @@
 
 #include "util/cv/cv_contour.h"
 #include "util/cv/cv_curve.h"
+#include "util/cv/cv_texton.h"
+#include "util/cv/cv_hist.h"
 #include "util/stat_util.h"
 
 namespace n3 {
@@ -11,6 +13,7 @@ namespace n3 {
 
     const unsigned int RS_IA_HIST_BIN = 12;
     const unsigned int RS_IN_HIST_BIN = 10;
+    const unsigned int RS_RI_HIST_BIN = 10;
 
     struct RegionStat {
       bool border; /* If region touches image borders or not */
@@ -34,12 +37,16 @@ namespace n3 {
 	 [9] contour internal angles
 	 [10] contour internal angle histogram
 	 [11] contour internal angle min/max/mean/median/std dev
+	 [12] texton histogram
+	 [13] region intensity histogram
+	 [14] region intensity min/max/mean/median/std dev
+
 	 Region statistics in use for tree3d only:
-	 [12] contour raw intensity histogram
-	 [13] contour raw intensity min/max/mean/median/std dev
-	 [14] contour pb intensity histogram
-	 [15] contour pb intensity min/max/mean/median/std dev
-	 [16] contour texton histogram
+	 [] contour raw intensity histogram
+	 [] contour raw intensity min/max/mean/median/std dev
+	 [] contour pb intensity histogram
+	 [] contour pb intensity min/max/mean/median/std dev
+	 [] contour texton histogram
       */
 
       friend std::ostream& operator << 
@@ -71,9 +78,16 @@ namespace n3 {
     void getRegionPoints (std::map<Label, RegionStat>& smap, 
 			  LabelImage::Pointer labelImage);
 
+    // Get region geometry stats
     // Region and unordered contour points should have been initialized
     void getRegionStat (RegionStat& rs, cv::Mat& canvas, 
 			int imageWidth, int imageHeight);
+
+    // Get region intensity stats
+    // Region points should have been initialized
+    void getRegionStat (RegionStat& rs, FloatImage::Pointer valImage, 
+			LabelImage::Pointer canvas, TextonDict const& tdict, 
+			float histLower, float histUpper, int histBin);
 
   };
 

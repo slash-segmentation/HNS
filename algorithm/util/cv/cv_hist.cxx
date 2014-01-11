@@ -1,6 +1,18 @@
 #include "cv_hist.h"
 using namespace n3;
 
+void n3::getHistAbsDiff (flist& hdiff, fvec const& h0, fvec const& h1)
+{
+  fvec::const_iterator hit0 = h0.begin(), hit1 = h1.begin();
+  while (hit0 != h0.end()) {
+    hdiff.push_back(fabs(*hit0 - *hit1));
+    ++hit0;
+    ++hit1;
+  }
+}
+
+
+
 double n3::getHistDistL1 (fvec const& h0, fvec const& h1)
 {
   if (h0.size() != h1.size()) 

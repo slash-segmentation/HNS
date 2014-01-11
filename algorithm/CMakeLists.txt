@@ -104,6 +104,7 @@ add_executable(hnsGenRegionStats
   util/struct_util.cxx 
   util/cv/cv_contour.cxx
   util/cv/cv_curve.cxx
+  util/cv/cv_texton.cxx
   struct/point.cxx)
 target_link_libraries(hnsGenRegionStats 
   ${ITK_LIBRARIES} 
@@ -114,6 +115,7 @@ add_executable(hnsGenSectionFeatures
   link3d/link3d_io.cxx
   link3d/sc.cxx
   util/cv/cv_contour.cxx
+  util/cv/cv_hist.cxx
   util/io_util.cxx
   util/struct_util.cxx 
   struct/point.cxx)
@@ -137,4 +139,15 @@ add_executable(hnsThreshold
   util/struct_util.cxx 
   struct/point.cxx)
 target_link_libraries(hnsThreshold 
+  ${ITK_LIBRARIES})
+
+add_executable(hnsChooseWatershedThreshold 
+  tree2d/main_chooseWatershedThreshold.cxx 
+  tree2d/tree2d_util.cxx 
+  util/struct_util.cxx
+  util/metric/metric_util.cxx 
+  util/metric/metric_pairf.cxx 
+  struct/point.cxx)
+target_link_libraries(hnsChooseWatershedThreshold 
+  gmp gmpxx 
   ${ITK_LIBRARIES})

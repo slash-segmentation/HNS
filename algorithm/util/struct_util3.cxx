@@ -67,6 +67,7 @@ void n3::getPointMap (PointMap3& rmap, PointLabelMap3& lmap,
 
 
 // c2rp: contour points becoming region points due to merging
+// Since lmap's keys are sorted, c2rp is sorted
 void n3::merge (Points3* c2rp, PointLabelMap3& lmap, Label r0, 
 		Label r1, Label r01)
 {
@@ -97,8 +98,7 @@ void n3::merge (Points3* c2rp, PointLabelMap3& lmap, Label r0,
 
 // Set sort to true for faster merge; cmap must be sorted
 void n3::merge (Points3* c2rp, PointMap3& cmap, PointLabelMap3& lmap, 
-		Label r0, Label r1, Label r01, bool sort, bool keepSrc, 
-		LabelImage3::Pointer canvas)
+		Label r0, Label r1, Label r01, bool sort, bool keepSrc)
 {
   // Append contour point map and change boundary point assignment map
   Points3* cp01 = &(cmap[r01]);
@@ -122,19 +122,17 @@ void n3::merge (Points3* c2rp, PointMap3& cmap, PointLabelMap3& lmap,
   }
   merge(c2rp, lmap, r0, r1, r01);
   // remove(*cp01, *c2rp, false); // Remove from contour point map: SLOW??
-  // remove(*cp01, *c2rp, canvas);	// Remove from contour point map
-  remove(*cp01, *c2rp, false, true);
+  remove(*cp01, *c2rp, false, sort);
 }
 
 
 
 // Set sort to true for faster contour merge; cmap must be sorted
 void n3::merge (PointMap3& rmap, PointMap3& cmap, PointLabelMap3& lmap, 
-		Label r0, Label r1, Label r01, bool sort, bool keepSrc, 
-		LabelImage3::Pointer canvas)
+		Label r0, Label r1, Label r01, bool sort, bool keepSrc)
 {
   Points3 c2rp;
-  merge(&c2rp, cmap, lmap, r0, r1, r01, sort, keepSrc, canvas);
+  merge(&c2rp, cmap, lmap, r0, r1, r01, sort, keepSrc);
   // Append region point
   Points3* rp = &(rmap[r01]);
   PointMap3::iterator rit0 = rmap.find(r0); 
@@ -148,6 +146,36 @@ void n3::merge (PointMap3& rmap, PointMap3& cmap, PointLabelMap3& lmap,
   }
   // Append contour points to inside points
   append(*rp, c2rp, false);
+}
+
+
+
+// Assume merging rfrom to rto
+// Used in pre-merging
+void n3::merge (PointMap3& rmap, PointLabelMap3& lmap, Label rfrom, 
+		Label rto)
+{
+  Points3 c2rp;
+  std::list<PointLabelMap3::iterator> irm;
+  for (PointLabelMap3::iterator it = lmap.begin(); it != lmap.end(); 
+       ++it) {
+    LabelSet::iterator fit = it->second.find(rfrom);
+    LabelSet::iterator tit = it->second.find(rto);
+    if (it->second.size() == 2 && fit != it->second.end() && 
+	tit != it->second.end()) {
+      c2rp.push_back(it->first);
+      irm.push_back(it);
+    }
+    else if (fit != it->second.end()) {
+      if (tit == it->second.end()) it->second.insert(rto);
+      it->second.erase(fit);
+    }
+  }
+  for (std::list<PointLabelMap3::iterator>::const_iterator it = 
+	 irm.begin(); it != irm.end(); ++it) lmap.erase(*it);
+  splice(rmap[rto], rmap[rfrom], false);
+  splice(rmap[rto], c2rp, false);
+  rmap.erase(rfrom);
 }
 
 

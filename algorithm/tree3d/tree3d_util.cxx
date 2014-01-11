@@ -3,6 +3,99 @@ using namespace n3;
 using namespace n3::tree2d;
 using namespace n3::tree3d;
 
+// Used in pre-merging
+Label n3::tree3d::getMinBoundaryNeighbor (BoundaryTable3 const& bt, 
+					  Label r0)
+{
+  Label r1 = BGVAL;
+  Float vmin = FLOAT_MAX;
+  for (BoundaryTable3::const_iterator bit = bt.begin(); 
+       bit != bt.end(); ++bit) {
+    Label l0 = bit->first.first, l1 = bit->first.second;
+    if (l0 == r0 || l1 == r0) {
+      double v = -getSaliency(bit->second);
+      if (v < vmin) {
+	r1 = (r0 == l0? l1: l0);
+	vmin = v;
+      }
+    }
+  }
+  return r1;
+}
+
+
+
+// Do 2 types of merge
+// Input label image will be modified
+LabelImage3::Pointer n3::tree3d::merge (LabelImage3::Pointer labelImage, 
+					FloatImage3::Pointer pbImage, 
+					int ath0, int ath1, double pth)
+{
+  PointMap3 rmap, cmap;
+  getPointMap(rmap, labelImage, true);
+  PointLabelMap3 lmap;
+  getPointNeighbors(lmap, rmap[BGVAL], labelImage, CRCONN3);
+  rmap.erase(BGVAL);
+  BoundaryTable3 bt;
+  getBoundaryTable(bt, lmap, pbImage);
+  std::set<Label> aset, pset;
+  for (PointMap3::const_iterator it = rmap.begin(); it != rmap.end(); ++it) 
+    if (it->second.size() <= ath0) aset.insert(it->first);
+    else if (it->second.size() <= ath1) pset.insert(it->first);
+  // Type 0 merge 
+  while (aset.size() > 0) {
+    std::set<Label>::iterator sit = aset.begin();
+    Label rfrom = *sit;
+    PointMap3::const_iterator fit = rmap.find(rfrom);
+    if (fit != rmap.end() && fit->second.size() <= ath0) {
+      Label rto = getMinBoundaryNeighbor(bt, rfrom);
+      if (rto != BGVAL) {
+	updateBoundaryTable(bt, lmap, rfrom, rto);
+	merge(rmap, lmap, rfrom, rto);
+	PointMap3::const_iterator tit = rmap.find(rto);
+	if (tit->second.size() > ath1) {
+	  aset.erase(rto);
+	  pset.erase(rto);
+	}
+	else if (tit->second.size() > ath0) {
+	  aset.erase(rto);
+	  pset.insert(rto);
+	}
+	else aset.insert(rto);
+      }
+    }
+    aset.erase(sit);
+  }
+  // Type 1 merge
+  while (pset.size() > 0) {
+    std::set<Label>::iterator sit = pset.begin();
+    Label rfrom = *sit;
+    PointMap3::const_iterator fit = rmap.find(rfrom);
+    if (fit != rmap.end() && fit->second.size() <= ath1) {
+      std::list<Float> vals;
+      getvs<FloatImage3>(vals, pbImage, fit->second);
+      Float v = getMean(vals);
+      if (v >= pth) {
+	Label rto = getMinBoundaryNeighbor(bt, rfrom);
+	if (rto != BGVAL) {
+	  updateBoundaryTable(bt, lmap, rfrom, rto);
+	  merge(rmap, lmap, rfrom, rto);
+	  PointMap3::const_iterator tit = rmap.find(rto);
+	  if (tit != rmap.end()) 
+	    if (tit->second.size() > ath1) pset.erase(rto);
+	    else pset.insert(rto);
+	}
+      }
+    }
+    pset.erase(sit);
+  }
+  labelImage->FillBuffer(BGVAL);
+  for (PointMap3::const_iterator it = rmap.begin(); it != rmap.end(); 
+       ++it) setvs<LabelImage3>(labelImage, it->second, it->first);
+}
+
+
+
 // -median
 Float n3::tree3d::getSaliency (std::list<fPixel3> const& pixels)
 {
@@ -143,57 +236,6 @@ void n3::tree3d::updateBoundaryTable (BoundaryTable3& bt,
 
 
 
-// // bp: all 0 pixel points
-// void n3::tree3d::getMerges (std::list<fMerge>& merges, 
-// 			    PointMap3& cmap, Points3 const& bp, 
-// 			    LabelImage3::Pointer labelImage, 
-// 			    FloatImage3::Pointer valImage)
-// {
-//   // For debug
-//   time_t start = time(0);
-//   time_t local = time(0);
-//   // ~ For debug
-//   PointLabelMap3 lmap;
-//   getPointNeighbors(lmap, bp, labelImage, CRCONN3);
-//   getNeighborPoints(cmap, lmap);
-//   // For debug
-//   std::cerr << "generating lmap and cmap took " 
-// 	    << difftime(time(0), local) / 60.0 << std::endl;
-//   local = time(0);
-//   // ~ For debug
-//   BoundaryTable3 bt;
-//   MergeQueue mq;
-//   getBoundaryTable(bt, mq, lmap, valImage);
-//   // For debug
-//   std::cerr << "generating bt took " 
-// 	    << difftime(time(0), local) / 60.0 << std::endl;
-//   local = time(0);
-//   // ~ For debug
-//   std::set<LabelPair> removed;
-//   Label r01 = cmap.rbegin()->first; ++r01;
-//   while (mq.size() > 0) {
-//     fMerge m = mq.top();
-//     mq.pop();
-//     std::set<LabelPair>::iterator rit = 
-//       removed.find(std::make_pair(m.from0, m.from1));
-//     if (rit == removed.end()) {
-//       Label r0 = m.from0, r1 = m.from1;
-//       updateBoundaryTable(bt, mq, removed, r0, r1, r01);
-//       // Saliency = -median; but store median (not saliency) in a merge
-//       merges.push_back(fMerge(r0, r1, r01, -(m.data)));
-//       Points3 c2rp;
-//       merge(c2rp, cmap, lmap, r0, r1, r01);
-//       ++r01;
-//       // For debug
-//       std::cerr << "generated a merge (" << r0 << ", " << r1 << ")" 
-// 		<< std::endl;
-//       // ~ For debug
-//     }
-//     else removed.erase(rit);
-//   }
-// }
-
-
 Label n3::tree3d::getMaxLabel (PointLabelMap3 const& lmap)
 {
   Label ret = 0;
@@ -285,6 +327,7 @@ void n3::tree3d::getBoundary (Points3& boundary, Points3 const& contour0,
 
 // Given whether a leaf node touches image borders
 // Determine whether all nodes touch image borders
+// bmap: label -> image border points
 void n3::tree3d::getNodeBorderIndicators (std::vector<bool>& indicators, 
 					  fTree const& tree, 
 					  PointMap3 const& bmap)

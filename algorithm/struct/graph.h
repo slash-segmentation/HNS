@@ -151,6 +151,50 @@ namespace n3 {
       }
     }
 
+    void get_nonterminals (std::list<int>& nt) const {
+      for (typename NodeMap::const_iterator it = nodes.begin(); 
+	   it != nodes.end(); ++it) {
+	if (it->second.in_edges.size() != 0 && 
+	    it->second.out_edges.size() != 0)
+	  nt.push_back(it->second.id);
+      }
+    }
+
+    void print (bool std_out) {
+      if (std_out) {
+	std::cout << "id = " << id << "\n"
+		  << "maxNodeID = " << max_node_id << "\n"
+		  << "maxEdgeID = " << max_edge_id << "\n"
+		  << "NodeMap: ";
+	for (typename NodeMap::const_iterator nit = nodes.begin(); 
+	     nit != nodes.end(); ++nit)
+	  std::cout << "(" << nit->first << ": " 
+		    << nit->second.data << ")\n";
+	std::cout << "EdgeMap: ";
+	for (typename EdgeMap::const_iterator eit = edges.begin(); 
+	     eit != edges.end(); ++eit)
+	  std::cout << "(" << eit->first << " (" << eit->second.src_node 
+		    << " " << eit->second.tar_node << ")" << ": " 
+		    << eit->second.data << ")\n";
+      }
+      else {
+	std::cerr << "id = " << id << "\n"
+		  << "maxNodeID = " << max_node_id << "\n"
+		  << "maxEdgeID = " << max_edge_id << "\n"
+		  << "NodeMap: ";
+	for (typename NodeMap::const_iterator nit = nodes.begin(); 
+	     nit != nodes.end(); ++nit)
+	  std::cerr << "(" << nit->first << ": " 
+		    << nit->second.data << ")\n";
+	std::cerr << "EdgeMap: ";
+	for (typename EdgeMap::const_iterator eit = edges.begin(); 
+	     eit != edges.end(); ++eit)
+	  std::cerr << "(" << eit->first << " (" << eit->second.src_node 
+		    << " " << eit->second.tar_node << ")" << ": " 
+		    << eit->second.data << ")\n";
+      }
+    }
+
     friend std::ostream& operator << (std::ostream& os, 
 				      Graph const& graph) {
       os << graph.id << " " << graph.max_node_id << " " 

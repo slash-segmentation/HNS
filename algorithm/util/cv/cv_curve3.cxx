@@ -56,3 +56,12 @@ double n3::getIncludedAngle (double vx0, double vy0, double vz0,
   else if (r < -1.0) r = -1.0;
   return acos(r);
 }
+
+
+
+// Return included angle of two lines (vx0, vy0, vz0) and (vx1, vy1, vz1)
+// Included angle is within [0, PI]
+double n3::getIncludedAngle (fvec const& l0, fvec const& l1)
+{
+  return getIncludedAngle(l0[0], l0[1], l0[2], l1[0], l1[1], l1[2]);
+}

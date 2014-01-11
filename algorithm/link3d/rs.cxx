@@ -15,6 +15,7 @@ void n3::link3d::getRegionPoints (std::map<Label, RegionStat>& smap,
 
 
 
+// Get region geometry stats
 // Region and unordered contour points should have been initialized
 void n3::link3d::getRegionStat (RegionStat& rs, cv::Mat& canvas, 
 				int imageWidth, int imageHeight)
@@ -40,7 +41,7 @@ void n3::link3d::getRegionStat (RegionStat& rs, cv::Mat& canvas,
   rs.centroid = rs.points.get_centroid();
   rs.box = rs.points.get_box();
   // Compute stats
-  rs.stats.reserve(12);
+  rs.stats.reserve(12 + 3);	// Pre-allocate for texture stats
   float area = (float)rs.points.size();
   float perimeter = getLength(rs.ocontour, true);
   rs.stats.push_back(fvec(1, area));
@@ -93,4 +94,30 @@ void n3::link3d::getRegionStat (RegionStat& rs, cv::Mat& canvas,
   rs.stats.back()[2] = getMean(tvec);
   rs.stats.back()[3] = getMedian(tvec);
   rs.stats.back()[4] = getStd(tvec, rs.stats.back()[2]);
+}
+
+
+
+// Get region intensity stats
+// Region points should have been initialized
+void n3::link3d::getRegionStat (RegionStat& rs, 
+				FloatImage::Pointer valImage, 
+				LabelImage::Pointer canvas, 
+				TextonDict const& tdict, 
+				float histLower, float histUpper, 
+				int histBin)
+{
+  rs.stats.push_back(fvec());
+  genTextonHist(rs.stats.back(), tdict, rs.points, valImage, 
+		canvas, false);
+  flist vals;
+  getvs<FloatImage>(vals, valImage, rs.points);
+  rs.stats.push_back(getHist(vals, histLower, histUpper, histBin, true));
+  fvec tvec(5, DUMMY);
+  tvec[0] = getMin(vals);
+  tvec[1] = getMax(vals);
+  tvec[2] = getMean(vals);
+  tvec[3] = getMedian(vals);
+  tvec[4] = getStd(vals, tvec[2]);
+  rs.stats.push_back(tvec);
 }

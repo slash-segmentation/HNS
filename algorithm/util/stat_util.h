@@ -38,21 +38,24 @@ namespace n3 {
 
 
   template <typename TContainer> double 
-    getStd (TContainer const& data, typename TContainer::value_type& mean)
+    getStd (TContainer const& data, double mean)
     {
       if (data.size() == 0) return DUMMY;
       double s = 0.0;
       for (typename TContainer::const_iterator it = data.begin(); 
-	   it != data.end(); ++it) s += (*it - mean) * (*it - mean);
+	   it != data.end(); ++it) 
+	s += ((double)(*it) - mean) * ((double)(*it) - mean);
       return sqrt(getr(s, data.size()));
     }
 
 
 
+  /* If sorted ascendingly, set isSorted = true */
   template <typename TContainer> typename TContainer::value_type
-    getMin (TContainer const& data)
+    getMin (TContainer const& data, bool isSorted = false)
     {
       if (data.size() == 0) return DUMMY;
+      if (isSorted) return data.front();
       typename TContainer::value_type ret = data.front();
       for (typename TContainer::const_iterator it = data.begin(); 
 	   it != data.end(); ++it) if (*it < ret) ret = *it;
@@ -61,10 +64,12 @@ namespace n3 {
 
 
 
+  /* If sorted ascendingly, set isSorted = true */
   template <typename TContainer> typename TContainer::value_type
-    getMax (TContainer const& data)
+    getMax (TContainer const& data, bool isSorted = false)
     {
       if (data.size() == 0) return DUMMY;
+      if (isSorted) return data.back();
       typename TContainer::value_type ret = data.front();
       for (typename TContainer::const_iterator it = data.begin(); 
 	   it != data.end(); ++it) if (*it > ret) ret = *it;
@@ -95,15 +100,31 @@ namespace n3 {
 
 
   template <typename TVal> double 
-    getMedian (std::vector<TVal>& data)
+    getMedian (std::vector<TVal>& data, bool isSorted = false)
     {
       if (data.size() == 0) return DUMMY;
-      std::sort(data.begin(), data.end());
+      if (!isSorted) std::sort(data.begin(), data.end());
       int len = data.size();
       return len % 2 == 0? (double)data[len / 2]: 
 	((double)data[len / 2 - 1] + (double)data[len / 2]) / 2.0;
     }
 
+
+
+  template <typename TVal> fvec 
+    getStats (std::list<TVal>& data, bool isSorted)
+    {
+      fvec ret(5, DUMMY);
+      if (!isSorted) data.sort();
+      ret[0] = getMin(data, true);
+      ret[1] = getMax(data, true);
+      double mean = getMean(data);
+      ret[2] = mean;
+      ret[3] = getMedian(data, true);
+      ret[4] = getStd(data, mean);
+      return ret;
+    }
+    
 
 
   template <typename T> fvec 

@@ -14,9 +14,9 @@ void operation (const char* featFileName, const char* labelImageName,
 		std::vector<const char*> const& valImageNames, 
 		const char* tdictFileName)
 {
-  // For debug
-  time_t local = time(0);
-  // ~ For debug
+  // // For debug
+  // time_t local = time(0);
+  // // ~ For debug
   LabelImage3::Pointer labelImage = readImage<LabelImage3>(labelImageName);
   std::vector<FloatImage3::Pointer> valImages;
   valImages.reserve(valImageNames.size());
@@ -24,37 +24,42 @@ void operation (const char* featFileName, const char* labelImageName,
 	 valImageNames.begin(); nit != valImageNames.end(); ++nit) 
     valImages.push_back(readImage<FloatImage3>(*nit));
   LabelImage3::Pointer canvas = createImage<LabelImage3>(labelImage, 0);
-  // For debug
-  std::cerr << "loading images took " << difftime(time(0), local) 
-	    << std::endl;
-  local = time(0);
-  // ~ For debug
+  // // For debug
+  // std::cerr << "loading images took " << difftime(time(0), local) 
+  // 	    << std::endl;
+  // local = time(0);
+  // // ~ For debug
   TextonDict tdict;
   if (tdictFileName != NULL) 
     readTexton(tdict, tdictFileName, TEXTON_PAT_LEN3);
-  // For debug
-  std::cerr << "loading texton dict took " << difftime(time(0), local) 
-	    << std::endl;
-  local = time(0);
-  // ~ For debug
+  // // For debug
+  // std::cerr << "loading texton dict took " << difftime(time(0), local) 
+  // 	    << std::endl;
+  // local = time(0);
+  // // ~ For debug
   std::list<fMerge> merges;
   readMerges(merges, treeFileName, saliencyFileName);
   fTree tree;
   getTree(tree, merges, &assignDouble);
   updateLeafSaliencies(tree, 0.0);
-  // For debug
-  std::cerr << "loading tree took " << difftime(time(0), local) 
-	    << std::endl;
-  local = time(0);
-  // ~ For debug
+  // // For debug
+  // std::cerr << "loading tree took " << difftime(time(0), local) 
+  // 	    << std::endl;
+  // local = time(0);
+  // // ~ For debug
   PointMap3 rmap, cmap;
   PointLabelMap3 lmap;
   getPointMap(rmap, lmap, cmap, labelImage, CRCONN3, false, true);
-  // For debug
-  std::cerr << "generating flat rmap/cmap took " 
-	    << difftime(time(0), local) << std::endl;
-  local = time(0);
-  // ~ For debug
+  // Add border points!
+  PointMap3 bmap;
+  getBorderPoints(bmap, labelImage, false);
+  for (PointMap3::iterator bit = bmap.begin(); bit != bmap.end(); ++bit) 
+    merge(cmap.find(bit->first)->second, bit->second, false);
+  // // For debug
+  // std::cerr << "generating flat rmap/cmap took " 
+  // 	    << difftime(time(0), local) << std::endl;
+  // local = time(0);
+  // // ~ For debug
   std::list<flist> feats;
   int N = tree.size(), n = 1;
   for (fTree::const_iterator pa = tree.begin(); pa != tree.end(); ++pa) {
@@ -83,24 +88,24 @@ void operation (const char* featFileName, const char* labelImageName,
       if (saliencyFileName != NULL)
 	getSaliencyFeatures(feats.back(), ch0->data, ch1->data, 
 			    pa->data, swap01);
-      // For debug
-      std::cerr << "generating feature (" << ch0->label << ", " 
-		<< ch1->label << ") [" << r0->size() << ", " 
-		<< r1->size() << ", " << uc0->size() << ", " 
-		<< uc1->size() << ", " << ub.size() << "] took " 
-		<< difftime(time(0), local) 
-		<< " [" << n << "/" << N << "]" << std::endl;
-      local = time(0);
-      // ~ For debug
+      // // For debug
+      // std::cerr << "generating feature (" << ch0->label << ", " 
+      // 		<< ch1->label << ") [" << r0->size() << ", " 
+      // 		<< r1->size() << ", " << uc0->size() << ", " 
+      // 		<< uc1->size() << ", " << ub.size() << "] took " 
+      // 		<< difftime(time(0), local) 
+      // 		<< " [" << n << "/" << N << "]" << std::endl;
+      // local = time(0);
+      // // ~ For debug
       // Modify rmap and cmap -- not keep source
       merge(rmap, cmap, lmap, ch0->label, ch1->label, pa->label, 
-	    true, false, canvas); 
-      // For debug
-      std::cerr << "merging (" << ch0->label << ", " 
-		<< ch1->label << ") took " << difftime(time(0), local) 
-		<< std::endl;
-      local = time(0);
-      // ~ For debug
+	    true, false); 
+      // // For debug
+      // std::cerr << "merging (" << ch0->label << ", " 
+      // 		<< ch1->label << ") took " 
+      // 		<< difftime(time(0), local) << std::endl;
+      // local = time(0);
+      // // ~ For debug
     }
     // For display
     // if (n % 200 == 0 || n > N - 3)

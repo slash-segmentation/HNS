@@ -10,6 +10,15 @@ namespace n3 {
 
     typedef std::map<LabelPair, std::list<fPixel3> > BoundaryTable3;
 
+    // Used in pre-merging
+    Label getMinBoundaryNeighbor (BoundaryTable3 const& bt, Label r0);
+
+    // Do 2 types of merge
+    // Input label image will be modified
+    LabelImage3::Pointer merge (LabelImage3::Pointer labelImage, 
+				FloatImage3::Pointer pbImage, 
+				int ath0, int ath1, double pth);
+
     // -median
     Float getSaliency (std::list<fPixel3> const& pixels);
 
@@ -64,8 +73,7 @@ namespace n3 {
       getPointMap (PointMap3& rmap, PointMap3& cmap, 
 		   LabelImage3::Pointer im, 
 		   std::list<tree2d::Merge<T> > const& merges, 
-		   bool includeBG, int connect, bool keepSrc, 
-		   LabelImage3::Pointer canvas)
+		   bool includeBG, int connect, bool keepSrc)
       {
 	PointLabelMap3 lmap;
 	getPointMap(rmap, im, true);
@@ -74,7 +82,7 @@ namespace n3 {
 	for (typename std::list<tree2d::Merge<T> >::const_iterator it = 
 	       merges.begin();it != merges.end(); ++it)
 	  merge(rmap, cmap, lmap, it->from0, it->from1, it->to, 
-		true, keepSrc, canvas);
+		true, keepSrc);
 	if (!includeBG) rmap.erase(BGVAL);
       }
 
@@ -83,12 +91,10 @@ namespace n3 {
     template <typename T> void
       getPointMap (PointMap3& rmap, LabelImage3::Pointer im, 
 		   std::list<tree2d::Merge<T> > const& merges, 
-		   bool includeBG, int connect, bool keepSrc, 
-		   LabelImage3::Pointer canvas)
+		   bool includeBG, int connect, bool keepSrc)
       {
 	PointMap3 cmap;
-	getPointMap(rmap, cmap, im, merges, includeBG, connect, 
-		    keepSrc, canvas);
+	getPointMap(rmap, cmap, im, merges, includeBG, connect, keepSrc);
       }
 
   };

@@ -7,7 +7,7 @@ using namespace n3::link3d;
 void operation (const char* featFileName, const char* regionPairFileName, 
 		const char* labelImageName0, const char* labelImageName1, 
 		const char* alignImageName1, const char* rstatFileName0, 
-		const char* rstatFileName1)
+		const char* rstatFileName1, bool useIntensityFeature)
 {
   LabelImage::Pointer labelImage0 = readImage<LabelImage>(labelImageName0);
   LabelImage::Pointer labelImage1 = readImage<LabelImage>(labelImageName1);
@@ -55,6 +55,10 @@ void operation (const char* featFileName, const char* regionPairFileName,
       			prs0->centroid.get_distance(prs1->centroid), 
       			oit == overlaps.end()? 0: oit->second, swap01);
       getAdvancedGeometry(feats.back(), prs0, prs1, swap01);
+      if (useIntensityFeature) {
+	getIntensity(feats.back(), prs0, prs1, swap01);
+	getTexture(feats.back(), prs0, prs1);
+      }
       if (alignImageName1 != NULL) {
 	double aa1 = 0.0, aap1 = 0.0, ao = 0.0, acd = DUMMY;
 	PointMap::const_iterator arit = armap.find(pit->r1);
@@ -81,7 +85,7 @@ void operation (const char* featFileName, const char* regionPairFileName,
 
 int main (int argc, char* argv[])
 {
-  if (argc != 8) {
+  if (argc != 8 && argc != 9) {
     std::cerr << "Usage: " << argv[0]
 	      << " regionPairFileName"
 	      << " labelImageName0"
@@ -89,6 +93,7 @@ int main (int argc, char* argv[])
 	      << " alignImageName1 ('NULL' to skip)"
 	      << " regionStatFileName0"
 	      << " regionStatFileName1"
+	      << " [useIntensityFeature = 0]"
 	      << " featFileName"
 	      << std::endl;
     return EXIT_FAILURE;
@@ -101,9 +106,11 @@ int main (int argc, char* argv[])
     strcmp(argv[argi++], "NULL") == 0? NULL: argv[argi - 1];
   const char* rstatFileName0 = argv[argi++];
   const char* rstatFileName1 = argv[argi++];
+  bool useIntensityFeature = 
+    argi < argc - 1 && atoi(argv[argi++]) != 0? true: false;
   const char* featFileName = argv[argi++];
   operation(featFileName, regionPairFileName, labelImageName0, 
 	    labelImageName1, alignImageName1, rstatFileName0, 
-	    rstatFileName1);
+	    rstatFileName1, useIntensityFeature);
   return EXIT_SUCCESS;
 }

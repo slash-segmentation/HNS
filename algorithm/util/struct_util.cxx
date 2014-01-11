@@ -71,17 +71,6 @@ void n3::getPointNeighbors (PointLabelMap& lmap, Points const& points,
 
 
 
-// // Get contour point for each region label
-// void n3::getNeighborPoints (PointMap& cmap, PointLabelMap const& lmap)
-// {
-//   for (PointLabelMap::const_iterator pit = lmap.begin(); 
-//        pit != lmap.end(); ++pit)
-//     for (LabelSet::const_iterator nit = pit->second.begin(); 
-// 	 nit != pit->second.end(); ++nit) cmap[*nit].push_back(pit->first);
-// }
-
-//------------------------------------------------------------------
-
 // Set sort to true for faster merge
 void n3::getNeighborPoints (PointMap& cmap, PointLabelMap const& lmap, 
 			    bool sort)
@@ -113,6 +102,7 @@ void n3::getPointMap (PointMap& rmap, PointLabelMap& lmap,
 
 
 // c2rp: contour points becoming region points due to merging
+// Since lmap's keys are sorted, c2rp is sorted
 void n3::merge (Points* c2rp, PointLabelMap& lmap, Label r0, 
 		Label r1, Label r01)
 {
@@ -143,8 +133,7 @@ void n3::merge (Points* c2rp, PointLabelMap& lmap, Label r0,
 
 // Set sort to true for faster merge; cmap must be sorted
 void n3::merge (Points* c2rp, PointMap& cmap, PointLabelMap& lmap, 
-		Label r0, Label r1, Label r01, bool sort, bool keepSrc, 
-		LabelImage::Pointer canvas)
+		Label r0, Label r1, Label r01, bool sort, bool keepSrc)
 {
   // Append contour point map and change boundary point assignment map
   Points* cp01 = &(cmap[r01]);
@@ -168,19 +157,17 @@ void n3::merge (Points* c2rp, PointMap& cmap, PointLabelMap& lmap,
   }
   merge(c2rp, lmap, r0, r1, r01);
   // remove(*cp01, *c2rp, false); // Remove from contour point map: SLOW??
-  // remove(*cp01, *c2rp, canvas);	// Remove from contour point map
-  remove(*cp01, *c2rp, false, true);
+  remove(*cp01, *c2rp, false, sort);
 }
 
 
 
 // Set sort to true for faster contour merge; cmap must be sorted
 void n3::merge (PointMap& rmap, PointMap& cmap, PointLabelMap& lmap, 
-		Label r0, Label r1, Label r01, bool sort, bool keepSrc, 
-		LabelImage::Pointer canvas)
+		Label r0, Label r1, Label r01, bool sort, bool keepSrc)
 {
   Points c2rp;
-  merge(&c2rp, cmap, lmap, r0, r1, r01, sort, keepSrc, canvas);
+  merge(&c2rp, cmap, lmap, r0, r1, r01, sort, keepSrc);
   // Append region point
   Points* rp = &(rmap[r01]);
   PointMap::iterator rit0 = rmap.find(r0); 
@@ -196,81 +183,34 @@ void n3::merge (PointMap& rmap, PointMap& cmap, PointLabelMap& lmap,
   append(*rp, c2rp, false);
 }
 
-//------------------------------------------------------------------
 
 
-// // Only generate merged region and contour points
-// // Do not modify any other structure
-// void n3::merge (Points& r01, Points& c01, Label l0, Label l1, 
-// 		Points const& r0, Points const& r1, Points const& c0, 
-// 		Points const& c1, PointLabelMap const& lmap)
-// {
-//   combine(c01, c0, c1, false);
-//   Points c2rp;
-//   for (PointLabelMap::const_iterator it = lmap.begin(); 
-//        it != lmap.end(); ++it) {
-//     LabelSet::const_iterator it0 = it->second.find(l0);
-//     LabelSet::const_iterator it1 = it->second.find(l1);
-//     if (it->second.size() == 2 && it0 != it->second.end() && 
-// 	it1 != it->second.end()) c2rp.push_back(it->first);
-//   }
-//   remove(c01, c2rp, false, false);
-//   combine(r01, r0, r1, false);
-//   append(r01, c2rp, false);
-// }
-
-
-
-// // c2rp: contour points to remove (becoming region points)
-// void n3::merge (Points& c2rp, PointMap& cmap, PointLabelMap& lmap, 
-// 		Label r0, Label r1, Label r01)
-// {
-//   // Append contour point map and change boundary point assignment map
-//   Points* cp01 = &(cmap[r01]);
-//   combine(*cp01, cmap[r0], cmap[r1], true);
-//   std::list<PointLabelMap::iterator> irm; // Iterators to remove
-//   for (PointLabelMap::iterator it = lmap.begin(); 
-//        it != lmap.end(); ++it) {
-//     LabelSet::iterator it0 = it->second.find(r0);
-//     LabelSet::iterator it1 = it->second.find(r1);
-//     // Find points exclusively between r0 and r1
-//     if (it->second.size() == 2 && it0 != it->second.end() && 
-// 	it1 != it->second.end()) {
-//       c2rp.push_back(it->first);
-//       irm.push_back(it);
-//     }
-//     // Remove all other r0/r1 labels and insert r01
-//     else if (it0 != it->second.end() || it1 != it->second.end()) {
-//       it->second.insert(r01);
-//       if (it0 != it->second.end()) it->second.erase(it0);
-//       if (it1 != it->second.end()) it->second.erase(it1);
-//     }
-//   }
-//   remove(*cp01, c2rp, false, false); // Remove from contour point map
-//   for (std::list<PointLabelMap::iterator>::const_iterator it = 
-// 	 irm.begin(); it != irm.end(); ++it) 
-//     lmap.erase(*it); // Remove from lmap
-// }
-
-
-
-// // Merge r0 and r1 to r01
-// // rpmap: region point map (to be appended by inside points of r01)
-// // rpmap: also to be appended by boundary points between r0/r1
-// // bpmap: contour point map (to be appended by contour points of r01)
-// // bplmap: boundary point assignment map (to be changed)
-// // bplmap: remove all r0/r1 labels, insert r01 labels
-// void n3::merge (PointMap& rmap, PointMap& cmap, PointLabelMap& lmap, 
-// 		Label r0, Label r1, Label r01)
-// {
-//   Points c2rp;
-//   merge(c2rp, cmap, lmap, r0, r1, r01);
-//   // Append region point
-//   Points* rp = &(rmap[r01]);
-//   combine(*rp, rmap[r0], rmap[r1], false);
-//   // Append contour points to inside points
-//   append(*rp, c2rp, false);
-// }
+// Assume merging rfrom to rto
+// Used in pre-merging
+void n3::merge (PointMap& rmap, PointLabelMap& lmap, 
+		Label rfrom, Label rto)
+{
+  Points c2rp;
+  std::list<PointLabelMap::iterator> irm;
+  for (PointLabelMap::iterator it = lmap.begin(); it != lmap.end(); ++it) {
+    LabelSet::iterator fit = it->second.find(rfrom);
+    LabelSet::iterator tit = it->second.find(rto);
+    if (it->second.size() == 2 && fit != it->second.end() && 
+	tit != it->second.end()) {
+      c2rp.push_back(it->first);
+      irm.push_back(it);
+    }
+    else if (fit != it->second.end()) {
+      if (tit == it->second.end()) it->second.insert(rto);
+      it->second.erase(fit);
+    }
+  }
+  for (std::list<PointLabelMap::iterator>::const_iterator it = 
+	 irm.begin(); it != irm.end(); ++it) lmap.erase(*it);
+  splice(rmap[rto], rmap[rfrom], false);
+  splice(rmap[rto], c2rp, false);
+  rmap.erase(rfrom);
+}
 
 
 

@@ -8,7 +8,6 @@ namespace n3 {
   typedef std::map<Label, Points3> PointMap3;
   typedef std::map<LabelPair, Points3> LabelPairPointMap3;
   typedef std::map<Point3, LabelSet> PointLabelMap3;
-  /* typedef boost::unordered_map<Point3, LabelSet> PointLabelMap3; */
 
   void getPoints (Points3& p, LabelImage3::Pointer im, Label label);
 
@@ -28,23 +27,23 @@ namespace n3 {
 		    LabelImage3::Pointer im, int connect, 
 		    bool includeBG, bool sort);
 
-  /* void merge (Points3& r01, Points3& c01, Label l0, Label l1,  */
-  /* 	      Points3 const& r0, Points3 const& r1, Points3 const& c0,  */
-  /* 	      Points3 const& c1, PointLabelMap3 const& lmap); */
-
   // c2rp: contour points becoming region points due to merging
+  // Since lmap's keys are sorted, c2rp is sorted
   void merge (Points3* c2rp, PointLabelMap3& lmap, Label r0, Label r1, 
 	      Label r01);
 
   // Set sort to true for faster merge; cmap must be sorted
   void merge (Points3* c2rp, PointMap3& cmap, PointLabelMap3& lmap, 
-	      Label r0, Label r1, Label r01, bool sort, bool keepSrc, 
-	      LabelImage3::Pointer canvas);
+	      Label r0, Label r1, Label r01, bool sort, bool keepSrc);
 
   // Set sort to true for faster contour merge; cmap must be sorted
   void merge (PointMap3& rmap, PointMap3& cmap, PointLabelMap3& lmap, 
-	      Label r0, Label r1, Label r01, bool sort, bool keepSrc, 
-	      LabelImage3::Pointer canvas);
+	      Label r0, Label r1, Label r01, bool sort, bool keepSrc);
+
+  // Assume merging rfrom to rto
+  // Used in pre-merging
+  void merge (PointMap3& rmap, PointLabelMap3& lmap, 
+	      Label rfrom, Label rto);
 
   // Get overlapping region label pairs
   void getOverlaps (std::list<LabelPair>& overlaps, 

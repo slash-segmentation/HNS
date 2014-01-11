@@ -9,10 +9,17 @@ namespace n3 {
 
   namespace tree2d {
 
-    /* typedef std::map<LabelPair, Points> BoundaryTable; */
-
     typedef std::map<LabelPair, std::list<fPixel> > BoundaryTable;
     typedef std::priority_queue<fMerge> MergeQueue;
+
+    // Used in pre-merging
+    Label getMinBoundaryNeighbor (BoundaryTable const& bt, Label r0);
+
+    // Do 2 types of merge
+    // Input label image will be modified
+    LabelImage::Pointer merge (LabelImage::Pointer labelImage, 
+			       FloatImage::Pointer pbImage, 
+			       int ath0, int ath1, double pth);
 
     // -median
     Float getSaliency (std::list<fPixel> const& pixels);
@@ -52,21 +59,9 @@ namespace n3 {
 		      Points const& contour1, 
 		      LabelImage::Pointer& canvas);
 
-
-    /* void getBoundaryTable (BoundaryTable& bt, PointLabelMap const& lmap); */
-    /* void updateBoundaryTable (BoundaryTable& bt, Label r0,  */
-    /* 			      Label r1, Label r01); */
-
-    /* // bp: all 0 pixel points */
-    /* // metric: 1 - min, 2 - mean, 3 - median */
-    /* void getMerges (std::list<fMerge>& merges, PointMap& cmap,  */
-    /* 		    Points const& bp, LabelImage::Pointer labelImage,  */
-    /* 		    FloatImage::Pointer valImage, int metric); */
-    /* void getMerges (std::list<fMerge>& merges,  */
-    /* 		    LabelImage::Pointer labelImage,  */
-    /* 		    FloatImage::Pointer valImage, int metric); */
     void updateLeafSaliencies (fTree& tree, PointMap const& rmap, 
 			       FloatImage::Pointer valImage);
+
     void updateLeafSaliencies (fTree& tree, double val);
 
     // mprobs: list of merge probabilities
@@ -74,44 +69,12 @@ namespace n3 {
     void getPotentials (fTree& tree, std::list<double> const& mprobs, 
 			int penalizeType = 0);
 
-
-
-    /* Generate hierarchical region point map */
-    template <typename T> void
-      getPointMap (PointMap& rmap, LabelImage::Pointer im, 
-		   std::list<Merge<T> > const& merges, 
-		   bool includeBG, int connect = CRCONN)
-      {
-	PointMap cmap;
-	getPointMap(rmap, cmap, im, merges, includeBG, connect);
-      }
-
-
-
-    /* /\* Generate hierarchical region and contour point map *\/ */
-    /* template <typename T> void */
-    /*   getPointMap (PointMap& rmap, PointMap& cmap, LabelImage::Pointer im,  */
-    /* 		   std::list<Merge<T> > const& merges,  */
-    /* 		   bool includeBG, int connect = CRCONN) */
-    /*   { */
-    /* 	PointLabelMap lmap; */
-    /* 	getPointMap(rmap, im, true); */
-    /* 	getPointNeighbors(lmap, rmap[BGVAL], im, connect); */
-    /* 	getNeighborPoints(cmap, lmap); */
-    /* 	for (typename std::list<Merge<T> >::const_iterator it =  */
-    /* 	       merges.begin();it != merges.end(); ++it) */
-    /* 	  merge(rmap, cmap, lmap, it->from0, it->from1, it->to); */
-    /* 	if (!includeBG) rmap.erase(BGVAL); */
-    /*   } */
-
-
     /* Generate hierarchical region and contour point map */
     template <typename T> void
       getPointMap (PointMap& rmap, PointMap& cmap, 
 		   LabelImage::Pointer im, 
 		   std::list<Merge<T> > const& merges, 
-		   bool includeBG, int connect, bool keepSrc, 
-		   LabelImage::Pointer canvas)
+		   bool includeBG, int connect, bool keepSrc)
       {
 	PointLabelMap lmap;
 	getPointMap(rmap, im, true);
@@ -120,7 +83,7 @@ namespace n3 {
 	for (typename std::list<Merge<T> >::const_iterator it = 
 	       merges.begin();it != merges.end(); ++it)
 	  merge(rmap, cmap, lmap, it->from0, it->from1, it->to, 
-		true, keepSrc, canvas);
+		true, keepSrc);
 	if (!includeBG) rmap.erase(BGVAL);
       }
 
@@ -129,12 +92,10 @@ namespace n3 {
     template <typename T> void
       getPointMap (PointMap& rmap, LabelImage::Pointer im, 
 		   std::list<Merge<T> > const& merges, 
-		   bool includeBG, int connect, bool keepSrc, 
-		   LabelImage::Pointer canvas)
+		   bool includeBG, int connect, bool keepSrc)
       {
 	PointMap cmap;
-	getPointMap(rmap, cmap, im, merges, includeBG, connect, 
-		    keepSrc, canvas);
+	getPointMap(rmap, cmap, im, merges, includeBG, connect, keepSrc);
       }
 
 
