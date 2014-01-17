@@ -19,6 +19,10 @@ namespace n3 {
   double getIncludedAngle (double vx0, double vy0, double vz0, 
 			   double vx1, double vy1, double vz1);
 
+  // Return included angle of two lines (vx0, vy0, vz0) and (vx1, vy1, vz1)
+  // Included angle is within [0, PI]
+  double getIncludedAngle (fvec const& l0, fvec const& l1);
+
 };
 
 #endif

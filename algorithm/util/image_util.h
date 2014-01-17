@@ -353,6 +353,11 @@ namespace n3 {
   }
 
 
+  inline ImageRegion getImageRegion (Box const& b)
+  {
+    return getImageRegion(b.width, b.height, b.start.x, b.start.y);
+  }
+
 
   inline ImageRegion3 getImageRegion (int w0, int w1, int w2, 
 				      int x0, int x1, int x2)
@@ -381,6 +386,13 @@ namespace n3 {
     s[1] = r.GetSize()[1];
     s[2] = w2;
     return ImageRegion3(i, s);
+  }
+
+
+  inline ImageRegion3 getImageRegion (Box3 const& b)
+  {
+    return getImageRegion(b.width, b.height, b.deep, 
+			  b.start.x, b.start.y, b.start.z);
   }
 
 
@@ -430,19 +442,6 @@ namespace n3 {
     {
       return createImage<TImage>(im->GetLargestPossibleRegion(), fill);
     }
-
-
-
-  /* template <typename TImage> typename TImage::Pointer  */
-  /*   createImage (ImageRegion3 const& r,  */
-  /* 		 typename TImage::PixelType fill = BGVAL) */
-  /*   { */
-  /*     typename TImage::Pointer ret = TImage::New(); */
-  /*     ret->SetRegions(r); */
-  /*     ret->Allocate(); */
-  /*     ret->FillBuffer(fill); */
-  /*     return ret; */
-  /*   } */
 
 
 
@@ -751,6 +750,17 @@ namespace n3 {
     }
 
 
+  template <typename TImage> int 
+    getUniqueValues (std::set<typename TImage::PixelType>& vals, 
+		     typename TImage::Pointer im) 
+    {
+      for (itk::ImageRegionConstIterator<TImage> 
+	     iit(im, im->GetLargestPossibleRegion()); !iit.IsAtEnd(); 
+	   ++iit)
+	vals.insert(iit.Get());
+    }
+
+
   /* Inside pixel: lowerThreshold <= intensity <= upperThreshold */
   template <typename TImageIn, typename TImageOut> 
     typename TImageOut::Pointer 
@@ -847,6 +857,45 @@ namespace n3 {
 	  ret.push_back(TPixel(x, y, z, getv<TImage>(im, x, y, z)));
       }
       return ret;
+    }
+
+
+
+  /* Get neighbor pixels with certain pixel value */
+  /* Connect should be 6, 18 or 26 */
+  template <typename TImage> void 
+    getNeighbors (Points3& nb, Point3 const& p, 
+		  typename TImage::Pointer im, int connect, 
+		  typename TImage::PixelType val) 
+    {
+      int w = getw<TImage>(im), h = geth<TImage>(im), d = getd<TImage>(im);
+      int dx[] = {-1, -1, -1, -1, -1, -1, -1, -1, -1, 
+		  0, 0, 0, 0, 0, 0, 0, 0, 
+		  1, 1, 1, 1, 1, 1, 1, 1, 1};
+      int dy[] = {-1, -1, -1, 0, 0, 0, 1, 1, 1, 
+		  -1, -1, -1, 0, 0, 1, 1, 1, 
+		  -1, -1, -1, 0, 0, 0, 1, 1, 1};
+      int dz[] = {-1, 0, 1, -1, 0, 1, -1, 0, 1, -1, 0, 1, -1, 1, 
+		  -1, 0, 1, -1, 0, 1, -1, 0, 1, -1, 0, 1};
+      std::vector<int> indices;
+      indices.reserve(connect);
+      if (connect == 6) {
+	int is[] = {4, 10, 12, 13, 15, 21};
+	indices.insert(indices.end(), is, is + 6);
+      }
+      else if (connect == 18) {
+	int is[] = {1, 3, 4, 5, 7, 9, 10, 11, 12, 
+		    13, 14, 15, 16, 18, 20, 21, 22, 24};
+	indices.insert(indices.end(), is, is + 18);	
+      }
+      else for (int i = 0; i < 26; ++i) indices.push_back(i);
+      for (std::vector<int>::const_iterator iit = indices.begin(); 
+	   iit != indices.end(); ++iit) {
+	int x = p.x + dx[*iit], y = p.y + dy[*iit], z = p.z + dz[*iit];
+	if (x >= 0 && x < w && y >= 0 && y < h && z >= 0 && z < d 
+	    && getv<TImage>(im, x, y, z) == val) 
+	  nb.push_back(Point3(x, y, z));
+      }
     }
 
 

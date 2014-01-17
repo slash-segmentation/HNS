@@ -90,3 +90,26 @@ void n3::link3d::getAdvancedGeometry (flist& feat, RegionStat const* rs0,
   append(feat, abs(subtract(rs0->stats[10], rs1->stats[10])));
   compute(feat, rs0->stats[11], rs1->stats[11]);
 }
+
+
+
+void n3::link3d::getIntensity (flist& feat, RegionStat const* rs0, 
+			       RegionStat const* rs1, bool swap01)
+{
+  getHistAbsDiff(feat, rs0->stats[13], rs1->stats[13]);
+  feat.push_back(getHistDistL1(rs0->stats[13], rs1->stats[13]));
+  feat.push_back(getHistDistX2(rs0->stats[13], rs1->stats[13]));
+  fvec const* s0 = &(rs0->stats[14]);
+  fvec const* s1 = &(rs1->stats[14]);
+  if (swap01) std::swap(s0, s1);
+  compute(feat, *s0, *s1);
+}
+
+
+
+void n3::link3d::getTexture (flist& feat, RegionStat const* rs0, 
+			     RegionStat const* rs1)
+{
+  feat.push_back(getHistDistL1(rs0->stats[12], rs1->stats[12]));
+  feat.push_back(getHistDistX2(rs0->stats[12], rs1->stats[12]));
+}

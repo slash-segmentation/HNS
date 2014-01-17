@@ -34,6 +34,7 @@ add_executable(genRegionStats
   ../util/struct_util.cxx 
   ../util/cv/cv_contour.cxx
   ../util/cv/cv_curve.cxx
+  ../util/cv/cv_texton.cxx
   ../struct/point.cxx)
 target_link_libraries(genRegionStats 
   ${ITK_LIBRARIES} 
@@ -44,6 +45,7 @@ add_executable(genSectionFeatures
   link3d_io.cxx
   sc.cxx
   ../util/cv/cv_contour.cxx
+  ../util/cv/cv_hist.cxx
   ../util/io_util.cxx
   ../util/struct_util.cxx 
   ../struct/point.cxx)
@@ -77,55 +79,55 @@ add_executable(link
 target_link_libraries(link 
   ${ITK_LIBRARIES})
 
-add_executable(genBodyStats 
-  main_genBodyStats.cxx 
-  bs.cxx
-  link3d_io.cxx
-  ../util/cv/cv_curve3.cxx
-  ../util/cv/cv_curve.cxx
-  ../util/cv/cv_contour.cxx
-  ../util/io_util.cxx
-  ../util/struct_util.cxx 
-  ../struct/point.cxx 
-  ../struct/point3.cxx)
-target_link_libraries(genBodyStats 
-  ${ITK_LIBRARIES} 
-  ${OpenCV_LIBS})
+# add_executable(genBodyStats 
+#   main_genBodyStats.cxx 
+#   bs.cxx
+#   link3d_io.cxx
+#   ../util/cv/cv_curve3.cxx
+#   ../util/cv/cv_curve.cxx
+#   ../util/cv/cv_contour.cxx
+#   ../util/io_util.cxx
+#   ../util/struct_util.cxx 
+#   ../struct/point.cxx 
+#   ../struct/point3.cxx)
+# target_link_libraries(genBodyStats 
+#   ${ITK_LIBRARIES} 
+#   ${OpenCV_LIBS})
 
-add_executable(genBodyPairs 
-  main_genBodyPairs.cxx 
-  link3d_io.cxx
-  ../util/io_util.cxx 
-  ../util/struct_util.cxx
-  ../struct/point.cxx)
-target_link_libraries(genBodyPairs 
-  ${ITK_LIBRARIES})
+# add_executable(genBodyPairs 
+#   main_genBodyPairs.cxx 
+#   link3d_io.cxx
+#   ../util/io_util.cxx 
+#   ../util/struct_util.cxx
+#   ../struct/point.cxx)
+# target_link_libraries(genBodyPairs 
+#   ${ITK_LIBRARIES})
 
-add_executable(genBodyPairLabels 
-  main_genBodyPairLabels.cxx 
-  link3d_io.cxx
-  ../util/io_util.cxx
-  ../util/struct_util.cxx
-  ../struct/point.cxx)
-target_link_libraries(genBodyPairLabels 
-  ${ITK_LIBRARIES})
+# add_executable(genBodyPairLabels 
+#   main_genBodyPairLabels.cxx 
+#   link3d_io.cxx
+#   ../util/io_util.cxx
+#   ../util/struct_util.cxx
+#   ../struct/point.cxx)
+# target_link_libraries(genBodyPairLabels 
+#   ${ITK_LIBRARIES})
 
-add_executable(genBodyPairFeatures 
-  main_genBodyPairFeatures.cxx 
-  link3d_io.cxx
-  bs.cxx
-  sc.cxx  
-  bc.cxx
-  ../util/cv/cv_contour.cxx
-  ../util/cv/cv_curve.cxx
-  ../util/cv/cv_curve3.cxx
-  ../util/io_util.cxx
-  ../util/struct_util.cxx 
-  ../struct/point.cxx
-  ../struct/point3.cxx)
-target_link_libraries(genBodyPairFeatures 
-  ${ITK_LIBRARIES} 
-  ${OpenCV_LIBS})
+# add_executable(genBodyPairFeatures 
+#   main_genBodyPairFeatures.cxx 
+#   link3d_io.cxx
+#   bs.cxx
+#   sc.cxx  
+#   bc.cxx
+#   ../util/cv/cv_contour.cxx
+#   ../util/cv/cv_curve.cxx
+#   ../util/cv/cv_curve3.cxx
+#   ../util/io_util.cxx
+#   ../util/struct_util.cxx 
+#   ../struct/point.cxx
+#   ../struct/point3.cxx)
+# target_link_libraries(genBodyPairFeatures 
+#   ${ITK_LIBRARIES} 
+#   ${OpenCV_LIBS})
 
 add_executable(threshold2
   main_threshold2.cxx 
@@ -134,4 +136,11 @@ add_executable(threshold2
   ../util/struct_util.cxx 
   ../struct/point.cxx)
 target_link_libraries(threshold2 
+  ${ITK_LIBRARIES})
+
+add_executable(checkRegionPairCoverage
+  main_checkRegionPairCoverage.cxx 
+  ../util/struct_util.cxx 
+  ../struct/point.cxx)
+target_link_libraries(checkRegionPairCoverage 
   ${ITK_LIBRARIES})

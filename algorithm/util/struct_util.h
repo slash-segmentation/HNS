@@ -34,11 +34,6 @@ namespace n3 {
   void getPointNeighbors (PointLabelMap& lmap, Points const& points, 
 			  LabelImage::Pointer im, int connect = CRCONN);
 
-  //----------------------------------------------------------------
-
-  /* // Get contour point for each region label */
-  /* void getNeighborPoints (PointMap& cmap, PointLabelMap const& lmap); */
-
   // Set sort to true for faster merge
   void getNeighborPoints (PointMap& cmap, PointLabelMap const& lmap, 
 			  bool sort);
@@ -50,39 +45,21 @@ namespace n3 {
 		    int connect, bool includeBG, bool sort);
 
   // c2rp: contour points becoming region points due to merging
+  // Since lmap's keys are sorted, c2rp is sorted
   void merge (Points* c2rp, PointLabelMap& lmap, Label r0, 
 	      Label r1, Label r01);
 
   // Set sort to true for faster merge; cmap must be sorted
   void merge (Points* c2rp, PointMap& cmap, PointLabelMap& lmap, 
-	      Label r0, Label r1, Label r01, bool sort, bool keepSrc, 
-	      LabelImage::Pointer canvas);
+	      Label r0, Label r1, Label r01, bool sort, bool keepSrc);
 
   // Set sort to true for faster contour merge; cmap must be sorted
   void merge (PointMap& rmap, PointMap& cmap, PointLabelMap& lmap, 
-	      Label r0, Label r1, Label r01, bool sort, bool keepSrc, 
-	      LabelImage::Pointer canvas);
+	      Label r0, Label r1, Label r01, bool sort, bool keepSrc);
 
-  /* // Only generate merged region and contour points */
-  /* // Do not modify any other structure */
-  /* void merge (Points& r01, Points& c01, Label l0, Label l1,  */
-  /* 	      Points const& r0, Points const& r1, Points const& c0,  */
-  /* 	      Points const& c1, PointLabelMap const& lmap); */
-
-  /* // c2rp: contour points to remove (becoming region points) */
-  /* void merge (Points& c2rp, PointMap& cmap, PointLabelMap& lmap,  */
-  /* 	      Label r0, Label r1, Label r01); */
-
-  /* // Merge r0 and r1 to r01 */
-  /* // rpmap: region point map (to be appended by inside points of r01) */
-  /* // rpmap: also to be appended by boundary points between r0/r1 */
-  /* // bpmap: contour point map (to be appended by contour points of r01) */
-  /* // bplmap: boundary point assignment map (to be changed) */
-  /* // bplmap: remove all r0/r1 labels, insert r01 labels */
-  /* void merge (PointMap& rmap, PointMap& cmap, PointLabelMap& lmap,  */
-  /* 	      Label r0, Label r1, Label r01); */
-
-  //----------------------------------------------------------------
+  // Assume merging rfrom to rto
+  // Used in pre-merging
+  void merge (PointMap& rmap, PointLabelMap& lmap, Label rfrom, Label rto);
 
   // Get overlapping region label pairs
   void getOverlaps (std::list<LabelPair>& overlaps, 

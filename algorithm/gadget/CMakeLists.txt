@@ -179,3 +179,10 @@ add_executable(genOrderedContours
 target_link_libraries(genOrderedContours
   ${ITK_LIBRARIES} 
   ${OpenCV_LIBS})
+
+add_executable(testConnectivity
+  main_testConnectivity.cxx 
+  ../struct/point.cxx 
+  ../struct/point3.cxx)
+target_link_libraries(testConnectivity
+  ${ITK_LIBRARIES})

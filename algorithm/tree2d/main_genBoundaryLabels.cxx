@@ -14,7 +14,7 @@ int getLabel (PointMap& rmap, PointMap& cmap, PointLabelMap& lmap,
   Points ub;
   getBoundary(ub, cmap.find(r0)->second, cmap.find(r1)->second, canvas);
   std::vector<BigFloat> subScores = getPairScores(sub, &ub, truthImage);
-  merge(rmap, cmap, lmap, r0, r1, r01, true, false, canvas);
+  merge(rmap, cmap, lmap, r0, r1, r01, true, false);
   sup.push_back(&(rmap.find(r01)->second));
   std::vector<BigFloat> supScores = getPairScores(sup, &ub, truthImage);
   // Boundary is true; do not merge

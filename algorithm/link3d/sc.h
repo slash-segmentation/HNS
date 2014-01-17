@@ -167,9 +167,7 @@ namespace n3 {
 	 contour internal angle std dev 1
 	 contour internal angle std dev abs diff
 
-       Intensity (47 features):
-         hist 0
-	 hist 1
+       Intensity (29 features):
 	 hist abs diff
 	 hist L1 dist
 	 hist X2 dist
@@ -196,7 +194,9 @@ namespace n3 {
        IN USE:
          Simple geometry for non-aligned region pair [1 - 29]
 	 Advanced geometry [30 - 201]
-	 Simple geometry for aligned region pair [202 - 230]       
+	 Simple geometry for aligned region pair [202 - 230]
+	 Intensity [231 - 259]
+	 Texture [260, 261]
 	 
      */
 
@@ -267,6 +267,12 @@ namespace n3 {
 
     void getAdvancedGeometry (flist& feat, RegionStat const* rs0, 
 			      RegionStat const* rs1, bool swap01);
+
+    void getIntensity (flist& feat, RegionStat const* rs0, 
+		       RegionStat const* rs1, bool swap01);
+
+    void getTexture (flist& feat, RegionStat const* rs0, 
+		     RegionStat const* rs1);
 
   };
 

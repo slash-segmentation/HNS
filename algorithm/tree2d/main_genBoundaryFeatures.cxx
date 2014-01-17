@@ -33,9 +33,9 @@ void operation (const char* featFileName, const char* labelImageName,
   getPointMap(rmap, lmap, cmap, labelImage, CRCONN, false, true);
   std::list<flist> feats;
   int N = tree.size(), n = 1;
-  // For debug
-  time_t local = time(0);
-  // ~ For debug
+  // // For debug
+  // time_t local = time(0);
+  // // ~ For debug
   for (fTree::const_iterator pa = tree.begin(); pa != tree.end(); ++pa) {
     if (pa->child0 >= 0 && pa->child1 >= 0) {
       fTree::TreeNode const* ch0 = &(tree[pa->child0]);
@@ -62,24 +62,25 @@ void operation (const char* featFileName, const char* labelImageName,
       if (saliencyFileName != NULL)
 	getSaliencyFeatures(feats.back(), ch0->data, ch1->data, 
 			    pa->data, swap01);
-      // For debug
-      std::cerr << "generating feature (" << ch0->label << ", " 
-		<< ch1->label << ") [" << r0->size() << ", " 
-		<< r1->size() << ", " << uc0->size() << ", " 
-		<< uc1->size() << ", " << ub.size() << "] took " 
-		<< difftime(time(0), local) 
-		<< " [" << n << "/" << N << "]" << std::endl;
-      local = time(0);
-      // ~ For debug
+      // // For debug
+      // std::cerr << "generating feature (" << ch0->label << ", " 
+      // 		<< ch1->label << ") [" << r0->size() << ", " 
+      // 		<< r1->size() << ", " << uc0->size() << ", " 
+      // 		<< uc1->size() << ", " << ub.size() << "] took " 
+      // 		<< difftime(time(0), local) 
+      // 		<< " [" << n << "/" << N << "]" << std::endl;
+      // local = time(0);
+      // // ~ For debug
       // Modify rmap and cmap -- not keep source
       merge(rmap, cmap, lmap, ch0->label, ch1->label, pa->label, 
-	    true, false, canvas); 
-      // For debug
-      std::cerr << "merging (" << ch0->label << ", " 
-		<< ch1->label << ") took " << difftime(time(0), local) 
-		<< std::endl;
-      local = time(0);
-      // ~ For debug
+	    true, false); 
+      // // For debug
+      // std::cerr << "merging (" << ch0->label << ", " 
+      // 		<< ch1->label << ") took " 
+      // 		<< difftime(time(0), local) 
+      // 		<< std::endl;
+      // local = time(0);
+      // // ~ For debug
     }
     // For display
     // if (n % 200 == 0 || n > N - 3)

@@ -93,7 +93,7 @@ void n3::getOverlaps (std::map<LabelPair, BigInt>& overlaps,
 
 /* Find a matching region from ref image for a region on src image  */
 /* Return false if no matching is found, which means m is invalid */
-/* Ignore background pixels on both images */
+/* Ignore background pixels on ref image */
 /* Match type is max overlap ratio */
 bool n3::match (std::pair<Label, double>& m, Points const& srcRegion, 
 		int srcSize, LabelImage::Pointer refImage, 
@@ -108,7 +108,7 @@ bool n3::match (std::pair<Label, double>& m, Points const& srcRegion,
 	     srcSize - overlaps.begin()->second);
   for (std::map<Label, unsigned int>::const_iterator oit = 
 	 overlaps.begin(); oit != overlaps.end(); ++oit) {
-    Label ref;
+    Label ref = oit->first;
     double r = (double)oit->second / 
       (double)(refSizeMap.find(ref)->second + srcSize - oit->second);
     if (r > m.second) {

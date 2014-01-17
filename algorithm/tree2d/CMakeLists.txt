@@ -69,6 +69,27 @@ add_executable(segment
 target_link_libraries(segment 
   ${ITK_LIBRARIES})
 
+add_executable(genPotPlotData 
+  main_genPotPlotData.cxx 
+  tree2d_util.cxx 
+  ../util/metric/metric_util.cxx
+  ../util/struct_util.cxx
+  ../struct/point.cxx)
+target_link_libraries(genPotPlotData 
+  gmp gmpxx
+  ${ITK_LIBRARIES})
+
+add_executable(chooseWatershedThreshold 
+  main_chooseWatershedThreshold.cxx 
+  tree2d_util.cxx 
+  ../util/struct_util.cxx
+  ../util/metric/metric_util.cxx 
+  ../util/metric/metric_pairf.cxx 
+  ../struct/point.cxx)
+target_link_libraries(chooseWatershedThreshold 
+  gmp gmpxx 
+  ${ITK_LIBRARIES})
+
 # add_executable(segmentToContours 
 #   main_segmentToContours.cxx 
 #   tree2d_util.cxx

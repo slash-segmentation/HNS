@@ -145,7 +145,7 @@ namespace n3 {
 
   /* Find a matching region from ref image for a region on src image  */
   /* Return false if no matching is found, which means m is invalid */
-  /* Ignore background pixels on both images */
+  /* Ignore background pixels on ref image */
   /* Match type is max overlap ratio */
   bool match (std::pair<Label, double>& m, Points const& srcRegion, 
 	      int srcSize, LabelImage::Pointer refImage, 

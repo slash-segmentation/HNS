@@ -4,7 +4,8 @@
 #include "struct/point.h"
 
 namespace n3 {
-  
+
+  void getHistAbsDiff (flist& hdiff, fvec const& h0, fvec const& h1);
   double getHistDistL1 (fvec const& h0, fvec const& h1);
   double getHistDistX2 (fvec const& h0, fvec const& h1);
   double getHistDistJD (fvec const& h0, fvec const& h1);

@@ -103,7 +103,8 @@ namespace n3 {
 
 
       Body (Label label, int status, TBodyData const& data)
-	: Graph<BodyNodeData, double>(-1), label(label), status(status), data(data) {}
+	: Graph<BodyNodeData, double>(-1), label(label), status(status), 
+	data(data) {}
 
 
       /* Add a node (profile) */
@@ -133,7 +134,8 @@ namespace n3 {
       void get_terminals (std::list<IntPair>& terminals, 
 			  bool includeTopBottom, int bottomSlice = -1, 
 			  int topSlice = -1) const {
-	if (includeTopBottom) Graph<BodyNodeData, double>::get_terminals(terminals);
+	if (includeTopBottom) 
+	  Graph<BodyNodeData, double>::get_terminals(terminals);
 	else 
 	  for (NodeMap::const_iterator it = nodes.begin(); 
 	       it != nodes.end(); ++it)

@@ -66,6 +66,35 @@ namespace n3 {
 	  float deep = -1.0) 
       : Box(start, width, height), start(start), deep(deep) {}
 
+    static Box3 getUnion (Box3 const& b0, Box3 const& b1) {
+      Box3 ret;
+      ret.start.x = b0.start.x < b1.start.x? b0.start.x: b1.start.x;
+      ret.start.y = b0.start.y < b1.start.y? b0.start.y: b1.start.y;
+      ret.start.z = b0.start.z < b1.start.z? b0.start.z: b1.start.z;
+      /* Not subtract/add 1 for all */
+      float xend0(b0.start.x + b0.width), yend0(b0.start.y + b0.height), 
+	zend0(b0.start.z + b0.deep), xend1(b1.start.x + b1.width), 
+	yend1(b1.start.y + b1.height), zend1(b1.start.z + b1.deep);
+      float xend = xend0 > xend1? xend0: xend1, 
+	yend = yend0 > yend1? yend0: yend1, 
+	zend = zend0 > zend1? zend0: zend1;
+      ret.width = xend - ret.start.x;
+      ret.height = yend - ret.start.y;
+      ret.deep = zend - ret.start.z;
+      return ret;
+    }
+
+    friend std::ostream& operator << (std::ostream& os, Box3 const& b) {
+      os << b.start << " " << b.width << " " << b.height << " " 
+	 << b.deep;
+      return os;
+    }
+    
+    friend std::istream& operator >> (std::istream& is, Box3& b) {
+      is >> b.start >> b.width >> b.height >> b.deep;
+      return is;
+    }
+
   };
 
 
@@ -108,6 +137,8 @@ namespace n3 {
     const_iterator last () const {return --body.end();}
 
     unsigned int size () const {return body.size();}
+
+    bool empty () const {return body.empty();}
 
     void clear () {body.clear();}
 
@@ -168,6 +199,9 @@ namespace n3 {
     /* Get centroid of all points */
     Point3 get_centroid () const;
 
+    /* Get bounding box */
+    Box3 get_box () const;
+
   };
 
 
@@ -200,6 +234,7 @@ namespace n3 {
     };
 
   typedef Pixel3<Float> fPixel3;
+  typedef Pixel3<Label> lPixel3;
 
 };
 

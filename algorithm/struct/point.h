@@ -102,6 +102,20 @@ namespace n3 {
 	 float height = 0.0)
       : start(start), width(width), height(height) {}
 
+    static Box getUnion (Box const& b0, Box const& b1) {
+      Box ret;
+      ret.start.x = b0.start.x < b1.start.x? b0.start.x: b1.start.x;
+      ret.start.y = b0.start.y < b1.start.y? b0.start.y: b1.start.y;
+      /* Not subtract/add 1 for all */
+      float xend0(b0.start.x + b0.width), yend0(b0.start.y + b0.height), 
+	xend1(b1.start.x + b1.width), yend1(b1.start.y + b1.height);
+      float xend = xend0 > xend1? xend0: xend1, 
+	yend = yend0 > yend1? yend0: yend1;
+      ret.width = xend - ret.start.x;
+      ret.height = yend - ret.start.y;
+      return ret;
+    }
+
     friend std::ostream& operator << (std::ostream& os, Box const& b) {
       os << b.start << " " << b.width << " " << b.height;
       return os;
@@ -181,6 +195,8 @@ namespace n3 {
     const_iterator last () const {return --body.end();}
 
     unsigned int size () const {return body.size();}
+
+    bool empty () const {return body.empty();}
 
     void clear () {body.clear();}
 
