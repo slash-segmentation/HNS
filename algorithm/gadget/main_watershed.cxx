@@ -22,7 +22,23 @@ void operation (const char* resImageName, const char* valImageName,
   }  
 }
 
-
+Float get_seed_threshold(char* s)
+{
+  Float f;
+  FILE *F;
+  if (strlen(s) == 1 && *s == '-') { F = stdin; }
+  else
+  {
+    char* e;
+    f = strtod(s, &e);
+    if (*e == 0) { return f; }
+    F = fopen(s, "r");
+    if (F == NULL) { return -1.0; }
+  }
+  int c = fscanf(F, "%f", &f);
+  if (F != stdin) { fclose(F); }
+  return (c <= 0) ? -1.0 : f;
+}
 
 int main (int argc, char* argv[])
 {
@@ -39,13 +55,15 @@ int main (int argc, char* argv[])
   }
   int argi = 1;
   const char* valImageName = argv[argi++];
-  Float seedThreshold = atof(argv[argi++]);
-  bool write16 = (argi < argc - 1 && atoi(argv[argi++]) != 0? 
-		  true: false);
-  bool keepWatershedLine = (argi < argc - 1 && atoi(argv[argi++]) == 0? 
-			    false: true);
-  bool isFullyConnected = (argi < argc - 1 && atoi(argv[argi++]) == 0? 
-			   false: true);
+  Float seedThreshold = get_seed_threshold(argv[argi++]);
+  if (seedThreshold <= 0.0)
+  {
+    std::cerr << "Seed theshold must be a positive floating-point value, a path of a file containing a positive floating-point value, or - to read the value from stdin." << std::endl;
+    return EXIT_FAILURE;
+  }
+  bool write16 = (argi < argc - 1 && atoi(argv[argi++]) != 0);
+  bool keepWatershedLine = (argi >= argc - 1 || atoi(argv[argi++]) != 0);
+  bool isFullyConnected = (argi >= argc - 1 || atoi(argv[argi++]) != 0);
   const char* resImageName = argv[argi++];
   operation(resImageName, valImageName, seedThreshold, keepWatershedLine, 
 	    isFullyConnected, write16);
