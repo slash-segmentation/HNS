@@ -7,15 +7,23 @@ using namespace n3::tree3d;
 
 void operation (const char* resImageName, const char* initSegImageName, 
 		const char* treeFileName, const char* mergeProbFileName, 
-		bool labelCC, bool write16)
+		const char* priorProbFileName, bool labelCC, 
+		bool write16)
 {
   std::list<fMerge> merges;
   readMerges(merges, treeFileName, NULL);
   fTree tree;
   getTree(tree, merges);
-  std::list<double> mprobs;
+  std::list<double> mprobs, pprobs;
   read(mprobs, mergeProbFileName, 1);
+  read(pprobs, priorProbFileName, 1);
   getPotentials(tree, mprobs);
+  std::list<double>::const_iterator pit = pprobs.begin();
+  for (fTree::iterator tit = tree.begin(); tit != tree.end(); ++tit) {
+    // tit->data *= (*pit + 1e-3);
+    tit->data += *pit;
+    ++pit;
+  }
   std::list<int> picks;
   resolve(picks, tree);
   std::map<Label, Label> init2final;
@@ -64,11 +72,12 @@ void operation (const char* resImageName, const char* initSegImageName,
 
 int main (int argc, char* argv[])
 {
-  if (argc < 5 || argc > 7) {
+  if (argc < 6 || argc > 8) {
     std::cerr << "Usage: " << argv[0]
-	      << " initialSegmentationImageName" 
-	      << " treeFileName" 
-	      << " mergeProbabilityFileName" 
+	      << " initialSegmentationImageName"
+	      << " treeFileName"
+	      << " mergeProbabilityFileName"
+	      << " priorProbabilityFileName"
 	      << " [labelOutputBinaryImageConnectedComponents = 1]"
 	      << " [writeToUInt16Image = 0]"
 	      << " finalSegmentationImageName"
@@ -79,10 +88,11 @@ int main (int argc, char* argv[])
   const char* initSegImageName = argv[argi++];
   const char* treeFileName = argv[argi++];
   const char* mergeProbFileName = argv[argi++];
+  const char* priorProbFileName = argv[argi++];
   bool labelCC = (argi < argc - 1 && atoi(argv[argi++]) == 0? false: true);
   bool write16 = (argi < argc - 1 && atoi(argv[argi++]) != 0? true: false);
   const char* resImageName = argv[argi++];
   operation(resImageName, initSegImageName, treeFileName, 
-	    mergeProbFileName, labelCC, write16);
+	    mergeProbFileName, priorProbFileName, labelCC, write16);
   return EXIT_SUCCESS;
 }

@@ -1,6 +1,20 @@
 #include "cv_ma.h"
 using namespace n3;
 
+LabelImage::Pointer n3::binaryThin (LabelImage::Pointer im, 
+				    Box const* roi)
+{
+  typedef itk::BinaryThinningImageFilter<LabelImage, LabelImage> B;
+  B::Pointer b = B::New();
+  b->SetInput(im);
+  if (roi != NULL) 
+    b->GetOutput()->SetRequestedRegion(getImageRegion(*roi));
+  b->Update();
+  return b->GetOutput();
+}
+
+
+
 LabelImage3::Pointer n3::binaryThin (LabelImage3::Pointer im, 
 				     Box3 const* roi)
 {
@@ -78,7 +92,7 @@ bool getSegment (Point3& endPoint, Points3& segment,
 void n3::getMedialAxisGraph (MaGraph& mag, LabelImage3::Pointer im, 
 			     Box3 const* roi, int connect)
 {
-  Point3 start;
+  Point3 start(-1, -1, -1);
   // Find first terminal point
   if (roi == NULL) {
     for (itk::ImageRegionConstIteratorWithIndex<LabelImage3> 
@@ -99,6 +113,7 @@ void n3::getMedialAxisGraph (MaGraph& mag, LabelImage3::Pointer im,
 	    break;
 	  }
   }
+  if (start.x < 0 || start.y < 0 || start.z < 0) return;
   start = getNearestTerminal(start, im, connect);
   // Build medial axis graph
   std::set<std::pair<int, Point3> > openSet;
@@ -123,44 +138,46 @@ void n3::getMedialAxisGraph (MaGraph& mag, LabelImage3::Pointer im,
 
 
 
-// For each branching point, there are three angles
-// Assume binary branching
-// nt: set of non-terminal ids; use 'NULL' to recompute
+// nt: set of non-terminal const iterators; use 'NULL' to recompute
 void n3::getBranchAngles (std::map<int, std::list<double> >& angles, 
-			  MaGraph const& mag, std::list<int>* nt)
+			  MaGraph const& mag, 
+			  std::list<MaGraphNodeMap::const_iterator>* nt)
 {
   const int LN_FIT_PT_NUM = 10;	// # of points to fit a line
-  std::list<int> nonterminals;
+  std::list<MaGraphNodeMap::const_iterator> nonterminals;
   if (nt == NULL) {
     mag.get_nonterminals(nonterminals);
     nt = &nonterminals;
   }
-  for (std::list<int>::const_iterator ntit = nt->begin(); 
+  for (std::list<MaGraphNodeMap::const_iterator>::const_iterator 
+	 ntit = nt->begin(); 
        ntit != nt->end(); ++ntit) {
-    MaGraphNode const* pn = &(mag.nodes.find(*ntit)->second);
-    if (pn->in_edges.size() != 1) 
-      perr("Unexpected: incoming edge # is not 1...");
-    if (pn->out_edges.size() != 2) 
-      perr("Unexpected: outgoing edge # is not 2...");
-    std::vector<Points> points;
-    points.reserve(3);
+    MaGraphNode const* pn = &((*ntit)->second);
+    // if (pn->in_edges.size() != 1) 
+    //   perr("Unexpected: incoming edge # is not 1...");
+    // if (pn->out_edges.size() != 2) 
+    //   perr("Unexpected: outgoing edge # is not 2...");
+    std::vector<Points3> points;
+    points.reserve(pn->in_edges.size() + pn->out_edges.size());
     // Incoming branch
-    int cnt = 0;
-    points.push_back(Points3());
-    MaGraphEdge const* ie = 
-      &(mag.edges.find(pn->in_edges.front())->second);
-    for (Points3::const_reverse_iterator pit = ie->data.rbegin(); 
-	 pit != ie->data.rend(); ++pit) {
-      if (cnt >= LN_FIT_PT_NUM) break;
-      points.back().push_back(*pit);
-      ++cnt;
+    for (std::list<int>::const_iterator eidit = pn->in_edges.begin(); 
+	 eidit != pn->in_edges.end(); ++eidit) {
+      points.push_back(Points3());
+      int cnt = 0;
+      MaGraphEdge const* ie = &(mag.edges.find(*eidit)->second);
+      for (Points3::const_reverse_iterator pit = ie->data.rbegin(); 
+	   pit != ie->data.rend(); ++pit) {
+	if (cnt >= LN_FIT_PT_NUM) break;
+	points.back().push_back(*pit);
+	++cnt;
+      }
     }
     // Outgoing branch    
     for (std::list<int>::const_iterator eit = pn->out_edges.begin(); 
 	 eit != pn->out_edges.end(); ++eit) {
-      MaGraphEdge const* oe = &(mag.edges.find(*eit)->second);
       points.push_back(Points3());
-      cnt = 0;
+      MaGraphEdge const* oe = &(mag.edges.find(*eit)->second);
+      int cnt = 0;
       for (Points3::const_iterator pit = oe->data.begin(); 
 	   pit != oe->data.end(); ++pit) {
 	if (cnt >= LN_FIT_PT_NUM) break;
@@ -169,13 +186,19 @@ void n3::getBranchAngles (std::map<int, std::list<double> >& angles,
       }
     }
     // Fit lines
-    std::vector<fvec> lines(3);
-    for (int i = 0; i < 3; ++i) fitLine(lines[i], points[i], true);
+    std::vector<fvec> lines(points.size());
+    for (int i = 0; i < points.size(); ++i) 
+      fitLine(lines[i], points[i], true);
     // Get angles;
-    std::list<double>* pa = &(angles[*ntit]);
-    pa->push_back(getIncludedAngle(lines[0], lines[1]));
-    pa->push_back(getIncludedAngle(lines[0], lines[2]));
-    pa->push_back(getIncludedAngle(lines[1], lines[2]));
+    std::list<double>* pa = &(angles[pn->id]);
+    for (std::vector<fvec>::const_iterator lit0 = lines.begin(); 
+	 lit0 != lines.end(); ++lit0) {
+      std::vector<fvec>::const_iterator lit1 = lit0; ++lit1;
+      while (lit1 != lines.end()) {
+	pa->push_back(getIncludedAngle(*lit0, *lit1));
+	++lit1;
+      }
+    }
   }
 }
 
@@ -185,9 +208,9 @@ void n3::getBranchAngles (std::map<int, std::list<double> >& angles,
 // Start from ends of a given edge
 // Branch order starts from 0, and increases by 1
 void n3::getBranchOrders (std::map<int, int>& orders, MaGraph const& mag, 
-			  int startEdgeID)
+			  MaGraphEdgeMap::const_iterator steit)
 {
-  MaGraphEdge const* pe = &(mag.edges.find(startEdgeID)->second);
+  MaGraphEdge const* pe = &(steit->second);
   std::set<int> openSet;
   orders[pe->src_node] = 0;
   openSet.insert(pe->src_node);
@@ -219,4 +242,210 @@ void n3::getBranchOrders (std::map<int, int>& orders, MaGraph const& mag,
       }
     }
   }
+}
+
+
+
+// Remove branching edge *beit between branching node *bnit
+// And terminal node *tnit
+// Remove terminal node *tnit
+// If *bnit becomes non-branching node 
+// Remove it and connect its neighbor nodes
+void removeBranch (MaGraph& mag, MaGraphEdgeMap::iterator beit, 
+		   MaGraphNodeMap::iterator bnit, 
+		   MaGraphNodeMap::iterator tnit)
+{
+  mag.remove_node(tnit);
+  MaGraphNode* bn = &(bnit->second);
+  // Case: n0 <- bn -> n1 ==> n0 -> n1 or n0 <- n1
+  if (bn->in_edges.size() == 0 && bn->out_edges.size() == 2) {
+    // Keep bne0->data shorter than bne1->data
+    MaGraphEdge* bne0 = &(mag.edges.find(bn->out_edges.front())->second);
+    MaGraphEdge* bne1 = &(mag.edges.find(bn->out_edges.back())->second);
+    if (bne0->data.size() > bne1->data.size()) std::swap(bne0, bne1);
+    // // For debug
+    // std::cerr << "combine: "
+    // 	      << "[" << bne0->id << ": "
+    // 	      << bne0->src_node << " - " 
+    // 	      << bne0->tar_node << " (" 
+    // 	      << bne0->data.size() << ")] "
+    // 	      << " + "
+    // 	      << "[" << bne1->id << ": "
+    // 	      << bne1->src_node << " - " 
+    // 	      << bne1->tar_node << " (" 
+    // 	      << bne1->data.size() << ")] "
+    // 	      << " = ";
+    // // ~ For debug
+    int nsrc = bne0->tar_node, ntar = bne1->tar_node;
+    MaGraphEdgeMap::iterator neit;
+    mag.add_edge(nsrc, ntar, neit);
+    // Point list order is reverse than edge direction
+    bne0->data.pop_front();
+    bne0->data.reverse();
+    splice(bne0->data, bne1->data, false);
+    splice(neit->second.data, bne0->data, false);
+    mag.remove_node(bnit);
+    // // For debug
+    // std::cerr << "[" << neit->second.id << ": "
+    // 	      << neit->second.src_node << " - " 
+    // 	      << neit->second.tar_node << " (" 
+    // 	      << neit->second.data.size() << ")]\n"
+    // 	      << std::endl;
+    // // ~ For debug
+  }
+  // Case: n0 <- bn <- n1 ==> n0 <- n1
+  else if (bn->in_edges.size() == 1 && bn->out_edges.size() == 1) {
+    MaGraphEdge* bne0 = &(mag.edges.find(bn->out_edges.front())->second);
+    MaGraphEdge* bne1 = &(mag.edges.find(bn->in_edges.front())->second);
+    // // For debug
+    // std::cerr << "combine: "
+    // 	      << "[" << bne0->id << ": "
+    // 	      << bne0->src_node << " - " 
+    // 	      << bne0->tar_node << " (" 
+    // 	      << bne0->data.size() << ")] "
+    // 	      << " + "
+    // 	      << "[" << bne1->id << ": "
+    // 	      << bne1->src_node << " - " 
+    // 	      << bne1->tar_node << " (" 
+    // 	      << bne1->data.size() << ")] "
+    // 	      << " = ";
+    // // ~ For debug
+    int nsrc = bne1->src_node, ntar = bne0->tar_node;
+    MaGraphEdgeMap::iterator neit;
+    mag.add_edge(nsrc, ntar, neit);
+    // Point list order is reverse than edge direction
+    bne0->data.pop_front();    
+    splice(bne1->data, bne0->data, false);
+    splice(neit->second.data, bne1->data, false);
+    mag.remove_node(bnit);
+    // // For debug
+    // std::cerr << "[" << neit->second.id << ": "
+    // 	      << neit->second.src_node << " - " 
+    // 	      << neit->second.tar_node << " (" 
+    // 	      << neit->second.data.size() << ")]\n"
+    // 	      << std::endl;
+    // // ~ For debug
+  }
+  // Case: n0 -> bn <- n1 ==> n0 <- n1 or n0 -> n1
+  else if (bn->in_edges.size() == 2 && bn->out_edges.size() == 0) {
+    // Keep bne0->data shorter than bne1->data
+    MaGraphEdge* bne0 = &(mag.edges.find(bn->in_edges.front())->second);
+    MaGraphEdge* bne1 = &(mag.edges.find(bn->in_edges.back())->second);
+    if (bne0->data.size() > bne1->data.size()) std::swap(bne0, bne1);
+    // // For debug
+    // std::cerr << "combine: "
+    // 	      << "[" << bne0->id << ": "
+    // 	      << bne0->src_node << " - " 
+    // 	      << bne0->tar_node << " (" 
+    // 	      << bne0->data.size() << ")] "
+    // 	      << " + "
+    // 	      << "[" << bne1->id << ": "
+    // 	      << bne1->src_node << " - " 
+    // 	      << bne1->tar_node << " (" 
+    // 	      << bne1->data.size() << ")] "
+    // 	      << " = ";
+    // // ~ For debug
+    int nsrc = bne1->src_node, ntar = bne0->src_node;
+    MaGraphEdgeMap::iterator neit;
+    mag.add_edge(nsrc, ntar, neit);
+    // Point list order is reverse than edge direction
+    bne0->data.pop_back();
+    bne0->data.reverse();
+    splice(bne1->data, bne0->data, false);
+    splice(neit->second.data, bne1->data, false);
+    mag.remove_node(bnit);
+    // // For debug
+    // std::cerr << "[" << neit->second.id << ": "
+    // 	      << neit->second.src_node << " - " 
+    // 	      << neit->second.tar_node << " (" 
+    // 	      << neit->second.data.size() << ")]\n"
+    // 	      << std::endl;
+    // // ~ For debug
+  }
+  // Do not handle other cases
+}
+
+
+
+// Recursively remove terminal segments shorter than threshold
+// Always remove shortest edge at each iteration
+// At least one edge is left
+// Important: do not prune terminal segment with terminal node
+// That has only out edge because it should be only global source node 
+// Removing it cause code difficulty of making another global source node
+void n3::pruneMedialAxisGraph (MaGraph& mag, double threshold)
+{
+  while (mag.edges.size() > 1) {
+    std::list<std::pair<MaGraphNodeMap::iterator, int> > terminals;
+    mag.get_terminals(terminals);
+    MaGraphNodeMap::iterator tnit = mag.nodes.end();
+    MaGraphEdgeMap::iterator beit = mag.edges.end(); 
+    double minlen = threshold;
+    for (std::list<std::pair<MaGraphNodeMap::iterator, 
+	   int> >::const_iterator tit = terminals.begin(); 
+	 tit != terminals.end(); ++tit) {
+      if (tit->second == 2) { // Terminal node has no out edge
+	MaGraphEdgeMap::iterator eit = 
+	  mag.edges.find(tit->first->second.in_edges.front());
+	double len = eit->second.data.size();
+	if (len < minlen) {
+	  beit = eit;
+	  tnit = tit->first;
+	  minlen = len;
+	}
+      }
+      else if (tit->second != 1) 
+	perr("Unexpected: isolated MaGraphNode found...");
+    }
+    if (minlen < threshold) {
+      // Branching node should then always be source node
+      MaGraphNodeMap::iterator bnit = 
+	mag.nodes.find(beit->second.src_node);
+      // // For debug
+      // std::cerr << "remove: " 
+      // 		<< "[" << beit->second.id << ": "
+      // 		<< beit->second.src_node << " - " 
+      // 		<< beit->second.tar_node << " (" 
+      // 		<< beit->second.data.size() << ")]" << std::endl;
+      // // ~ For debug
+      removeBranch(mag, beit, bnit, tnit);
+    }
+    else break;
+  }
+}
+
+
+
+void n3::smoothMedialAxisGraph (MaGraph& mag, double sigma)
+{
+  for (MaGraphEdgeMap::iterator eit = mag.edges.begin(); 
+       eit != mag.edges.end(); ++eit) {
+    Points3 smoothed;
+    smoothCurve(smoothed, eit->second.data, sigma, false);
+    eit->second.data = smoothed;
+  }
+}
+
+
+
+void n3::writeMedialAxisGraph (const char* fileName, MaGraph const& mag)
+{
+  std::ofstream os(fileName);
+  if (os.is_open()) {
+    os << mag << std::endl;
+    os.close();
+  }
+  else perr("Error: cannot create medial axis graph file...");
+}
+
+
+
+void n3::readMedialAxisGraph (MaGraph& mag, const char* fileName)
+{
+  std::ifstream is(fileName);
+  if (is.is_open()) {
+    is >> mag;
+    is.close();
+  }
+  else perr("Error: cannot read medial axis graph file...");
 }

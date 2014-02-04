@@ -47,19 +47,19 @@ void operation (const char* labelFileName, const char* labelImageName,
   int N = tree.size(), n = 1;
   for (fTree::const_iterator pa = tree.begin(); pa != tree.end(); ++pa) {
     if (pa->child0 >= 0 && pa->child1 >= 0) {
-      // For debug
-      time_t local = time(0);
-      // ~ For debug
+      // // For debug
+      // time_t local = time(0);
+      // // ~ For debug
       labels.push_back(getLabel(rmap, cmap, lmap, tree[pa->child0].label, 
 				tree[pa->child1].label, pa->label, canvas, 
 				truthImage));
-      // For debug
-      std::cerr << "generating label (" << tree[pa->child0].label << ", " 
-		<< tree[pa->child1].label << ") took " 
-		<< difftime(time(0), local) 
-		<< " [" << n << "/" << N << "]" << std::endl;
-      local = time(0);
-      // ~ For debug
+      // // For debug
+      // std::cerr << "generating label (" << tree[pa->child0].label << ", " 
+      // 		<< tree[pa->child1].label << ") took " 
+      // 		<< difftime(time(0), local) 
+      // 		<< " [" << n << "/" << N << "]" << std::endl;
+      // local = time(0);
+      // // ~ For debug
     }
     ++n;
   }

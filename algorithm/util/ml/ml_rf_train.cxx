@@ -1,4 +1,5 @@
 #include "ml_rf.h"
+using namespace rf;
 
 void classRF (double *x, int *dimx, int *cl, int *ncl, int *cat, 
 	      int *maxcat, int *sampsize, int *strata, int *Options, 
@@ -12,7 +13,7 @@ void classRF (double *x, int *dimx, int *cl, int *ncl, int *cat,
 	      double *proxts, double *errts, int *inbag, 
 	      int print_verbose_tree_progression);
 
-void train (void** argout, int nargout[], void** argin)
+void rf::train (void** argout, int nargout[], void** argin)
 {
   double* _tmp_d = NULL;
   int p_size = getScalar<int>(argin[16]);
@@ -245,9 +246,9 @@ void train (void** argout, int nargout[], void** argin)
 
 
 
-void train (Model& model, double* X, int* Y, int N, int D, 
-	    TrainExtraOptions& extra_options, int ntree, int mtry, 
-	    double* Xtst, int* Ytst, int Ntst)
+void rf::train (Model& model, double* X, int* Y, int N, int D, 
+		TrainExtraOptions& extra_options, int ntree, int mtry, 
+		double* Xtst, int* Ytst, int Ntst)
 {
   int DEFAULTS_ON = 0;
   int tst_available;
@@ -319,8 +320,7 @@ void train (Model& model, double* X, int* Y, int N, int D,
   }
   if (extra_options.sampsize != NULL) {
     sampsize = copyNumericVector(extra_options.sampsize, 
-				 extra_options.n_sampsize);
-    
+				 extra_options.n_sampsize);    
     n_sampsize = extra_options.n_sampsize;
   }
   if (extra_options.nodesize >= 0) nodesize = extra_options.nodesize;
@@ -819,4 +819,62 @@ void train (Model& model, double* X, int* Y, int N, int D,
     del(&Xtst);
     del(&Ytst);
   }
+}
+
+
+
+void rf::train (rf::Model& model, 
+		std::list<std::list<float> > const& feats, 
+		std::list<int> const& labels, int ntree, int mtry, 
+		float sampsizeRatio, bool isBalanceClass, 
+		bool printClassWeights)
+{
+  int N = feats.size(), D = feats.front().size();
+  double* X = new double[N * D];
+  double* pX = X;
+  for (std::list<std::list<float> >::const_iterator fit0 = feats.begin(); 
+       fit0 != feats.end(); ++fit0)
+    for (std::list<float>::const_iterator fit1 = fit0->begin(); 
+	 fit1 != fit0->end(); ++fit1) {
+      *pX = *fit1;
+      ++pX;
+    }
+  int* Y = new int[D];
+  int* pY = Y;
+  for (std::list<int>::const_iterator lit = labels.begin(); 
+       lit != labels.end(); ++lit) {
+    *pY = *lit;
+    ++pY;
+  }
+  TrainExtraOptions options;
+  // Set sample size
+  if (sampsizeRatio > 1e-6) {
+    options.sampsize = 
+      createIntScalar((int)((float)N * sampsizeRatio + 0.5));
+    options.n_sampsize = 1;
+  }
+  // Set classwt to balance class
+  if (isBalanceClass) {
+    std::map<int, int> labelCount;
+    countLabel(labelCount, Y, N);
+    int maxcnt = -1;
+    for (std::map<int, int>::const_iterator citr = labelCount.begin(); 
+	 citr != labelCount.end(); citr++) {
+      if (citr->second > maxcnt) maxcnt = citr->second;
+    }
+    options.classwt = new double[labelCount.size()];
+    options.n_classwt = labelCount.size();
+    int i = 0;
+    for (std::map<int, int>::const_iterator citr = labelCount.begin(); 
+	 citr != labelCount.end(); citr++) {
+      options.classwt[i] = (double)maxcnt / (double)citr->second;
+      if (printClassWeights) 
+	std::cerr << "Class " << citr->first << ": " << citr->second 
+		  << " [w = " << options.classwt[i] << "]" << std::endl;
+      i++;
+    }
+  }
+  train(model, X, Y, N, D, options, ntree, mtry);
+  delete[] Y;
+  delete[] X;
 }

@@ -40,6 +40,12 @@ namespace n3 {
   void merge (PointMap3& rmap, PointMap3& cmap, PointLabelMap3& lmap, 
 	      Label r0, Label r1, Label r01, bool sort, bool keepSrc);
 
+  // Set sort to true for faster contour merge; cmap must be sorted
+  // Also combine border points in bmap if any
+  void merge (PointMap3& rmap, PointMap3& cmap, PointLabelMap3& lmap, 
+	      PointMap3& bmap, Label r0, Label r1, Label r01, 
+	      bool sort, bool keepSrc);
+
   // Assume merging rfrom to rto
   // Used in pre-merging
   void merge (PointMap3& rmap, PointLabelMap3& lmap, 
@@ -57,9 +63,9 @@ namespace n3 {
 		    LabelImage3::Pointer refImage, bool includeRefBG);
 
   // Collect all points on image borders
+  // Output points are supposed to be in x-y-z-ascending order
   void getBorderPoints (PointMap3& bmap, LabelImage3::Pointer image, 
 			bool includeBG);
-
 
   /* Find overlaps on ref image for all regions on src image */
   template <typename TCount> void 

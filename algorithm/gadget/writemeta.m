@@ -1,16 +1,17 @@
 function writemeta(filename,vol,meta)
 
 dims = ndims(vol);
-sze = size(vol);
 
 % Transpose input vol to output correct image
 % Only account for 2d and 3d images
 % Unclear about higher dimensional images
 if dims == 2
-    vol = vol';
+    vol = permute(vol, [2 1]);
 elseif dims == 3
     vol = permute(vol, [2 1 3]);
 end
+
+sze = size(vol);
 
 [str,maxsize,endian] = computer;
 if endian == 'L'

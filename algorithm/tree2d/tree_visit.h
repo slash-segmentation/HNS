@@ -211,7 +211,64 @@ namespace n3 {
 	  pick = getPick(trees, comp, assign);
 	}
       }
-       
+
+
+
+    template <typename T>
+      struct BiTreeNodePointer 
+      {
+	Label l;
+	BiTreeNode<T>* p;
+
+	BiTreeNodePointer (Label l, BiTreeNode<T>* p) : l(l), p(p) {}
+
+	bool operator < (BiTreeNodePointer<T> const& tnp) {
+	  return l < tnp.l;
+	}
+      };
+
+    
+
+    /* Input tree will be modified */
+    template <typename T> void 
+      encode (std::list<Label>& code, BiTree<T>& tree)
+      {
+	tree.update_siblings();	/* Prepare siblings */
+	std::list<BiTreeNodePointer<T> > nps;
+	Label labelToAssign = 0;
+	for (typename BiTree<T>::iterator tit = tree.begin(); 
+	     tit != tree.end(); ++tit)
+	  if (tit->child0 < 0 && tit->child1 < 0) {
+	    tit->status = 1;
+	    nps.push_back(BiTreeNodePointer<T>(tit->label, &(*tit)));
+	    if (tit->label > labelToAssign) labelToAssign = tit->label;
+	  }
+	  else {
+	    tit->label = 0;
+	    tit->status = 0;
+	  }
+	nps.sort();
+	++labelToAssign;
+	while (!nps.empty()) {
+	  BiTreeNodePointer<T> np = nps.front();
+	  nps.pop_front();
+	  BiTreeNode<T>* self = np.p;
+	  if (self->parent >= 0) {	/* Not root */
+	    BiTreeNode<T>* pa = &(tree[self->parent]);
+	    BiTreeNode<T>* sib = &(tree[self->sibling]);
+	    if (self->status == 1 && sib->status == 1 && pa->status == 0) {
+	      pa->status = 1;
+	      pa->label = labelToAssign++;
+	      nps.push_back(BiTreeNodePointer<T>(pa->label, pa));
+	      code.push_back(self->label);
+	      code.push_back(sib->label);
+	      code.push_back(pa->label);
+	    }
+	    else if (sib->status == 0) nps.push_back(np);
+	  }
+	}
+      }
+
   };
 
 };

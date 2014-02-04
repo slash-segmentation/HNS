@@ -32,8 +32,10 @@ namespace n3 {
 			   FloatImage3::Pointer valImage);
 
     // Assume r01 is greater than any existing region label
-    void updateBoundaryTable (BoundaryTable3& bt, tree2d::MergeQueue& mq, 
-			      std::set<LabelPair>& removed, 
+    // Use mq = NULL to skip updating it
+    // Use removed = NULL to skip collecting removed label pairs
+    void updateBoundaryTable (BoundaryTable3& bt, tree2d::MergeQueue* mq, 
+			      std::set<LabelPair>* removed, 
 			      Label r0, Label r1, Label r01);
 
     // Merge from rfrom to rto
@@ -60,7 +62,7 @@ namespace n3 {
 
     void getBoundary (Points3& boundary, Points3 const& contour0, 
 		      Points3 const& contour1, 
-		      LabelImage3::Pointer& canvas);
+		      LabelImage3::Pointer canvas);
 
     // Given whether a leaf node touches image borders
     // Determine whether all nodes touch image borders

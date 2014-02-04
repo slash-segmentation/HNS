@@ -17,14 +17,30 @@ namespace n3 {
     BiTreeNode (int self = -1) : status(0), label(0), self(self), 
       parent(-1), child0(-1), child1(-1), sibling(-1) {}
 
+
+    void print (std::ostream& os) {
+      os << "self = " << self << ", label = " << label 
+	 << ", parent = " << parent << ", child0 = " << child0 
+	 << ", child1 = " << child1 << ", sibling = " << sibling 
+	 << ", status = " << status << ", data = " << data << " ";
+    }
+
     
-    friend std::ostream& operator << 
-      (std::ostream& out, BiTreeNode<T> const& n) {
-      out << "self = " << n.self << ", label = " << n.label 
-	  << ", parent = " << n.parent << ", child0 = " << n.child0 
-	  << ", child1 = " << n.child1 << ", sibling = " << n.sibling 
-	  << ", status = " << n.status << std::endl;
-      return out;
+    friend std::ostream& operator << (std::ostream& os, 
+				      BiTreeNode<T> const& n) {
+      os << n.self << " " << n.label << " " << n.parent << " "
+	 << n.child0 << " " << n.child1 << " " << n.sibling << " "
+	 << n.status << " " << n.data << " ";
+      return os;
+    }
+
+
+    friend std::istream& operator >> (std::istream& is, 
+				      BiTreeNode<T>& n)
+    {
+      is >> n.self >> n.label >> n.parent >> n.child0 >> n.child1 
+	 >> n.sibling >> n.status >> n.data;
+      return is;
     }
 
   };
@@ -176,9 +192,15 @@ namespace n3 {
     void update_leaves () {
       leaves.clear();
       leaves.reserve((body.size() + 1) / 2);
-      for (BiTree::const_iterator it = begin(); it != end(); ++it)
+      for (const_iterator it = begin(); it != end(); ++it)
 	if (it->child0 < 0 && it->child1 < 0) 
 	  leaves.push_back(it->self);
+    }
+
+
+    void update_siblings () {
+      for (iterator it = begin(); it != end(); ++it) 
+	it->sibling = get_sibling(it->self);
     }
 
 
@@ -269,6 +291,27 @@ namespace n3 {
     void undo_changes (std::list<BiTreeNodeChange<T> > const& cs) {
       for (typename std::list<BiTreeNodeChange<T> >::const_iterator 
 	     it = cs.begin(); it != cs.end(); ++it) undo_change(*it);
+    }
+
+    
+    /* Do not copy data */
+    template <typename TOut> void copyStruct (BiTree<TOut>& tree) {
+      tree.root = root;
+      tree.leaves = leaves;
+      tree.lnmap = lnmap;
+      int n = size();
+      tree.resize(n);
+      for (int i = 0; i < n; ++i) {
+	BiTreeNode<TOut>* ptar = &(tree[i]);
+	TreeNode* psrc = &(body[i]);
+	ptar->status = psrc->status;
+	ptar->label = psrc->label;
+	ptar->self = psrc->self;
+	ptar->parent = psrc->parent;
+	ptar->child0 = psrc->child0;
+	ptar->child1 = psrc->child1;
+	ptar->sibling = psrc->sibling;
+      }
     }
 
 

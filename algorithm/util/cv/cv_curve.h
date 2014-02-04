@@ -18,6 +18,9 @@ namespace n3 {
   void smoothCurve (std::vector<Points>& po, std::vector<Points> const& pi, 
 		    double sigma, bool closed);
 
+  // Smooth out sharp angles smaller than threshold ([0, PI])
+  void smoothSharpCurve (Points& po, double threshold, bool closed);
+
   // Approximate curve into corners within specified max deviation distance 
   void approxCurve (Points& corners, Points const& curve, 
 		    double maxDeviation, bool closed);

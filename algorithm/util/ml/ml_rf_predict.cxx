@@ -1,4 +1,5 @@
 #include "ml_rf.h"
+using namespace rf;
 
 void classForest (int *mdim, int *ntest, int *nclass, int *maxcat,
 		  int *nrnodes, int *ntree, double *x, double *xbestsplit,
@@ -8,7 +9,7 @@ void classForest (int *mdim, int *ntest, int *nclass, int *maxcat,
 		  int *treeSize, int *keepPred, int *prox, double *proxMat, 
 		  int *nodes);
 
-void predict (void** argout, int nargout[], void** argin, int N, int D)
+void rf::predict (void** argout, int nargout[], void** argin, int N, int D)
 {
   int p_size = D;
   int mdim = p_size;
@@ -120,7 +121,8 @@ void predict (void** argout, int nargout[], void** argin, int N, int D)
   nargout[1] = dims_ntest[1];
   dims_ntest[0] = nclass;
   dims_ntest[1] = ntest;
-  argout[2] = createNumericMatrix<double>(dims_ntest[0], dims_ntest[1], 0.0);
+  argout[2] = 
+    createNumericMatrix<double>(dims_ntest[0], dims_ntest[1], 0.0);
   nargout[4] = dims_ntest[0];
   nargout[5] = dims_ntest[1];
   jet = (int*)getData(argout[0]);
@@ -150,10 +152,10 @@ void predict (void** argout, int nargout[], void** argin, int N, int D)
 
 
 
-void predict (int*& Y, double*& votes, int*& prediction_per_tree, 
-	      double*& proximity_ts, int*& nodes, double* X, 
-	      int N, int D, Model& model, 
-	      PredictExtraOptions& extra_options)
+void rf::predict (int*& Y, double*& votes, int*& prediction_per_tree, 
+		  double*& proximity_ts, int*& nodes, double* X, 
+		  int N, int D, Model const& model, 
+		  PredictExtraOptions& extra_options)
 {
   int opt_predict_all = 0;
   int opt_proximity = 0;
@@ -248,4 +250,73 @@ void predict (int*& Y, double*& votes, int*& prediction_per_tree,
   del((int**)&argin[10]);
   del((int**)&argin[11]);
   del(&argin);
+}
+
+
+
+void rf::predict (std::list<double>& probs, Model const& model, int label, 
+		  std::list<std::list<float> > const& feats)
+{
+  int N = feats.size();
+  int D = feats.front().size();
+  double* X = new double[N * D];
+  double* pX = X;
+  for (std::list<std::list<float> >::const_iterator fit0 = feats.begin(); 
+       fit0 != feats.end(); ++fit0) 
+    for (std::list<float>::const_iterator fit1 = fit0->begin(); 
+	 fit1 != fit0->end(); ++fit1) {
+      *pX = *fit1;
+      ++pX;
+    }
+  int* Y = NULL;
+  double* votes = NULL;
+  int* prediction_per_tree = NULL;
+  double* proximity_ts = NULL;
+  int* nodes = NULL;
+  PredictExtraOptions options;
+  predict(Y, votes, prediction_per_tree, proximity_ts, nodes, 
+	  X, N, D, model, options);
+  int n_orig_labels = model.n_orig_labels[0] * model.n_orig_labels[1];
+  int classNo = -1;
+  for (int i = 0; i < n_orig_labels; i++) 
+    if (model.orig_labels[i] == label) {
+      classNo = i;
+      break;
+    }
+  for (int i = 0; i < N; ++i) 
+    probs.push_back(votes[i * model.nclass + classNo] / 
+		    (double)model.ntree);
+  delete[] X;
+}
+
+
+
+double rf::predict (Model const& model, int label, 
+		    std::list<float> const& feat)
+{
+  int D = feat.size();
+  double* X = new double[D];
+  double* pX = X;
+  for (std::list<float>::const_iterator fit = feat.begin(); 
+       fit != feat.end(); ++fit) {
+    *pX = *fit;
+    ++pX;
+  }
+  int* Y = NULL;
+  double* votes = NULL;
+  int* prediction_per_tree = NULL;
+  double* proximity_ts = NULL;
+  int* nodes = NULL;
+  PredictExtraOptions options;
+  predict(Y, votes, prediction_per_tree, proximity_ts, nodes, 
+	  X, 1, D, model, options);
+  int n_orig_labels = model.n_orig_labels[0] * model.n_orig_labels[1];
+  int classNo = -1;
+  for (int i = 0; i < n_orig_labels; i++) 
+    if (model.orig_labels[i] == label) {
+      classNo = i;
+      break;
+    }
+  delete[] X;
+  return votes[classNo] / (double)model.ntree;
 }

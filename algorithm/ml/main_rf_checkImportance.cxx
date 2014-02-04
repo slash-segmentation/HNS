@@ -1,4 +1,5 @@
 #include "util/ml/ml_rf.h"
+using namespace rf;
 
 void operation (const char* modelFileName, std::vector<int> const& featNos)
 {

@@ -1,20 +1,21 @@
 #include "ml_rf.h"
+using namespace rf;
 
-void* getData (void* p) 
+void* rf::getData (void* p) 
 { 
   return p; 
 }
 
 
 
-double* getPr (void* p) 
+double* rf::getPr (void* p) 
 {
   return (double*)p;
 }
 
 
 
-void sort_unique (int*& y, int& n_y, int* x, int n_x, int n_x_inc)
+void rf::sort_unique (int*& y, int& n_y, int* x, int n_x, int n_x_inc)
 {
   std::set<int> s;
   for (int i = 0; i < n_x; i += n_x_inc) s.insert(x[i]);
@@ -27,7 +28,7 @@ void sort_unique (int*& y, int& n_y, int* x, int n_x, int n_x_inc)
 
 
 
-void sort_unique (double*& y, int& n_y, double* x, int n_x, int n_x_inc)
+void rf::sort_unique (double*& y, int& n_y, double* x, int n_x, int n_x_inc)
 {
   std::set<double> s;
   for (int i = 0; i < n_x; i += n_x_inc) s.insert(x[i]);
@@ -119,8 +120,8 @@ int getFileColumnNum (const char* fileName)
 
 
 // Caution: will allocate memory for matrix
-void readMatrixFromFile (double*& matrix, int& rowNum, int& colNum, 
-			 const char* fileName)
+void rf::readMatrixFromFile (double*& matrix, int& rowNum, int& colNum, 
+			     const char* fileName)
 {
   std::ifstream fs(fileName);
   if (fs.is_open()) {
@@ -156,8 +157,8 @@ void readMatrixFromFile (double*& matrix, int& rowNum, int& colNum,
 
 
 
-void readMatrixFromFiles (double*& matrix, int& rowNum, int& colNum, 
-			  std::vector<const char*> const& fileNames)
+void rf::readMatrixFromFiles (double*& matrix, int& rowNum, int& colNum, 
+			      std::vector<const char*> const& fileNames)
 {
   std::list<double*> matrices;
   std::list<int> rowNums;
@@ -190,8 +191,8 @@ void readMatrixFromFiles (double*& matrix, int& rowNum, int& colNum,
 
 
 
-void readMatrixFromFiles (int*& matrix, int& rowNum, int& colNum, 
-			  std::vector<const char*> const& fileNames)
+void rf::readMatrixFromFiles (int*& matrix, int& rowNum, int& colNum, 
+			      std::vector<const char*> const& fileNames)
 {
   double* m;
   readMatrixFromFiles(m, rowNum, colNum, fileNames);
@@ -206,7 +207,7 @@ void readMatrixFromFiles (int*& matrix, int& rowNum, int& colNum,
 
 
 
-void countLabel (std::map<int, int>& labelCount, int* Y, int N)
+void rf::countLabel (std::map<int, int>& labelCount, int* Y, int N)
 {
   for (int i = 0; i < N; i++) {
     if (labelCount.count(Y[i]) > 0) labelCount[Y[i]]++;

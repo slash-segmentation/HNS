@@ -101,8 +101,8 @@ void n3::tree2d::getSaliencyFeatures (flist& feat, float saliency0,
   feat.push_back(saliency0);
   feat.push_back(saliency1);
   feat.push_back(saliency2);
-  float ds0 = fabs(saliency2 - saliency0);
-  float ds1 = fabs(saliency2 - saliency1);  
+  float ds0 = saliency2 - saliency0;
+  float ds1 = saliency2 - saliency1;
   feat.push_back(ds0);
   feat.push_back(ds1);
   feat.push_back(fabs(ds0 - ds1));

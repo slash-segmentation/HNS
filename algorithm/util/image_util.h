@@ -193,8 +193,9 @@ namespace n3 {
     getvs (std::list<typename TImage::PixelType>& vals, 
 	   typename TImage::Pointer im, Points3 const& points)
     {
-      for (Points3::const_iterator it = points.begin(); it != points.end(); 
-	   ++it) vals.push_back(getv<TImage>(im, it->x, it->y, it->z));
+      for (Points3::const_iterator it = points.begin(); 
+	   it != points.end(); ++it) 
+	vals.push_back(getv<TImage>(im, it->x, it->y, it->z));
     }
 
 
@@ -203,8 +204,8 @@ namespace n3 {
     setvs (typename TImage::Pointer im, Points const& points, 
 	   typename TImage::PixelType val)
     {
-      for (Points::const_iterator it = points.begin(); it != points.end(); 
-	   ++it) im->SetPixel(p2i(*it), val);
+      for (Points::const_iterator it = points.begin(); 
+	   it != points.end(); ++it) im->SetPixel(p2i(*it), val);
     }
 
 
@@ -213,8 +214,8 @@ namespace n3 {
     setvs (typename TImage::Pointer im, Points3 const& points, 
 	   typename TImage::PixelType val)
     {
-      for (Points3::const_iterator it = points.begin(); it != points.end(); 
-	   ++it) im->SetPixel(p2i(*it), val);
+      for (Points3::const_iterator it = points.begin(); 
+	   it != points.end(); ++it) im->SetPixel(p2i(*it), val);
     }
 
 
@@ -516,7 +517,8 @@ namespace n3 {
       outImages.insert(outImages.end(), 
 		       createImage<TImageOut>(w, h, BGVAL));
       itk::ImageRegionIterator<TImageOut> 
-	oit(outImages.back(), outImages.back()->GetLargestPossibleRegion());
+	oit(outImages.back(), 
+	    outImages.back()->GetLargestPossibleRegion());
       while (!oit.IsAtEnd()) {
 	oit.Set(iit.Get());
 	++oit;
@@ -601,11 +603,11 @@ namespace n3 {
     labelConnectedComponents (typename TImageIn::Pointer im,
 			      typename TImageIn::PixelType bgVal = BGVAL, 
 			      bool isFullyConnected = false, 
-			      bool isBinary = true, 
+			      bool isLabelImage = true, 
 			      typename TImageIn::PixelType 
 			      diffThreshold = 0)
   {
-    if (isBinary) {
+    if (isLabelImage) {
       typedef itk::ConnectedComponentImageFilter<TImageIn, TImageOut> C;
       typename C::Pointer c = C::New();
       c->SetBackgroundValue(bgVal);
@@ -615,8 +617,8 @@ namespace n3 {
       return c->GetOutput();
     }
     else {
-      typedef itk::ScalarConnectedComponentImageFilter<TImageIn, TImageOut> 
-	C;
+      typedef 
+	itk::ScalarConnectedComponentImageFilter<TImageIn, TImageOut> C;
       typename C::Pointer c = C::New();
       c->SetDistanceThreshold(diffThreshold);
       c->SetBackgroundValue(bgVal);
@@ -926,7 +928,8 @@ namespace n3 {
 		  Point3 const& p, typename TImage::Pointer im, 
 		  int connect) 
     {
-      int w = getw<TImage>(im), h = geth<TImage>(im), d = getd<TImage>(im);
+      int w = getw<TImage>(im), h = geth<TImage>(im), 
+	d = getd<TImage>(im);
       int dx[] = {-1, -1, -1, -1, -1, -1, -1, -1, -1, 
 		  0, 0, 0, 0, 0, 0, 0, 0, 
 		  1, 1, 1, 1, 1, 1, 1, 1, 1};
@@ -962,17 +965,38 @@ namespace n3 {
   /* That are exclusively between two regions with same label */
   template <typename TImage> void 
     removeExclusiveGaps (typename TImage::Pointer image, 
-			 typename TImage::PixelType bgVal, int connect)
+			 typename TImage::PixelType bgVal, int connect, 
+			 bool recursive = false)
     {
+      bool changed = false;
       for (itk::ImageRegionIteratorWithIndex<TImage> 
-	     iit(image, image->GetLargestPossibleRegion()); !iit.IsAtEnd(); 
-	   ++iit)
+	     iit(image, image->GetLargestPossibleRegion()); 
+	   !iit.IsAtEnd(); ++iit)
 	if (iit.Get() == bgVal) {
 	  std::set<typename TImage::PixelType> nb;
 	  getNeighbors<TImage>(nb, i2p(iit.GetIndex()), image, connect);
 	  nb.erase(bgVal);
-	  if (nb.size() == 1) 
+	  if (nb.size() == 1) {
 	    setv<TImage>(image, i2p(iit.GetIndex()), *(nb.begin()));
+	    changed = true;
+	  }
+	}
+      if (recursive)
+	while (changed) {
+	  changed = false;
+	  for (itk::ImageRegionIteratorWithIndex<TImage> 
+		 iit(image, image->GetLargestPossibleRegion()); 
+	       !iit.IsAtEnd(); ++iit)
+	    if (iit.Get() == bgVal) {
+	      std::set<typename TImage::PixelType> nb;
+	      getNeighbors<TImage>(nb, i2p(iit.GetIndex()), 
+				   image, connect);
+	      nb.erase(bgVal);
+	      if (nb.size() == 1) {
+		setv<TImage>(image, i2p(iit.GetIndex()), *(nb.begin()));
+		changed = true;
+	      }
+	    }
 	}
     }
 

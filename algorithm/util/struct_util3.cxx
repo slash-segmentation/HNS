@@ -150,6 +150,52 @@ void n3::merge (PointMap3& rmap, PointMap3& cmap, PointLabelMap3& lmap,
 
 
 
+// Set sort to true for faster contour merge; cmap must be sorted
+// Also combine border points in bmap if any
+void n3::merge (PointMap3& rmap, PointMap3& cmap, PointLabelMap3& lmap, 
+		PointMap3& bmap, Label r0, Label r1, Label r01, 
+		bool sort, bool keepSrc)
+{
+  merge(rmap, cmap, lmap, r0, r1, r01, sort, keepSrc);
+  PointMap3::iterator bit0 = bmap.find(r0), bit1 = bmap.find(r1);
+  if (bit0 != bmap.end() || bit1 != bmap.end()) {
+    PointMap3::iterator bit = 
+      bmap.insert(bmap.end(), std::make_pair(r01, Points3()));
+    if (bit0 != bmap.end() && bit1 != bmap.end()) {
+      if (keepSrc) 
+	combine(bit->second, bit0->second, bit1->second, false, sort);
+      else {
+	if (sort) {
+	  merge(bit->second, bit0->second, false);
+	  merge(bit->second, bit1->second, false);
+	}
+	else {
+	  splice(bit->second, bit0->second, false);
+	  splice(bit->second, bit1->second, false);	  
+	}
+	bmap.erase(bit0);
+	bmap.erase(bit1);
+      }
+    }
+    else if (bit0 != bmap.end()) {
+      if (keepSrc) bit->second = bit0->second;
+      else {
+	splice(bit->second, bit0->second, false);
+	bmap.erase(bit0);
+      }
+    }
+    else { // bit1 != bmap.end()
+      if (keepSrc) bit->second = bit1->second;
+      else {
+	splice(bit->second, bit1->second, false);
+	bmap.erase(bit1);
+      }
+    }
+  }
+}
+
+
+
 // Assume merging rfrom to rto
 // Used in pre-merging
 void n3::merge (PointMap3& rmap, PointLabelMap3& lmap, Label rfrom, 
@@ -235,35 +281,89 @@ void n3::getOverlaps (std::set<Label>& overlaps, Points3 const& srcRegion,
 
 
 
+// // Collect all points on image borders
+// void n3::getBorderPoints (PointMap3& bmap, LabelImage3::Pointer image, 
+// 			  bool includeBG)
+// {
+//   int w = getw<LabelImage3>(image), h = geth<LabelImage3>(image), 
+//     d = getd<LabelImage3>(image);
+//   int xmax = w - 1, ymax = h - 1, zmax = d - 1;
+//   // z = 0 and z = d - 1 and 8 edges and 8 vertices
+//   for (int x = 0; x < w; ++x) 
+//     for (int y = 0; y < h; ++y) {
+//       Label l = getv<LabelImage3>(image, x, y, 0);
+//       if (l != BGVAL || includeBG) bmap[l].push_back(Point3(x, y, 0));
+//       l = getv<LabelImage3>(image, x, y, zmax);
+//       if (l != BGVAL || includeBG) bmap[l].push_back(Point3(x, y, zmax));
+//     }
+//   // y = 0 and y = h - 1 and 4 edges
+//   for (int x = 0; x < w; ++x)
+//     for (int z = 1; z < zmax; ++z) {
+//       Label l = getv<LabelImage3>(image, x, 0, z);
+//       if (l != BGVAL || includeBG) bmap[l].push_back(Point3(x, 0, z));
+//       l = getv<LabelImage3>(image, x, ymax, z);
+//       if (l != BGVAL || includeBG) bmap[l].push_back(Point3(x, ymax, z));
+//     }
+//   // x = 0 and x = w - 1
+//   for (int y = 1; y < ymax; ++y)
+//     for (int z = 1; z < zmax; ++z) {
+//       Label l = getv<LabelImage3>(image, 0, y, z);
+//       if (l != BGVAL || includeBG) bmap[l].push_back(Point3(0, y, z));
+//       l = getv<LabelImage3>(image, xmax, y, z);
+//       if (l != BGVAL || includeBG) bmap[l].push_back(Point3(xmax, y, z));
+//     }
+// }
+
+
+
 // Collect all points on image borders
+// Output points are supposed to be in x-y-z-ascending order
 void n3::getBorderPoints (PointMap3& bmap, LabelImage3::Pointer image, 
 			  bool includeBG)
 {
-  int w = getw<LabelImage3>(image), h = geth<LabelImage3>(image), 
+  const int w = getw<LabelImage3>(image), h = geth<LabelImage3>(image), 
     d = getd<LabelImage3>(image);
-  int xmax = w - 1, ymax = h - 1, zmax = d - 1;
-  // z = 0 and z = d - 1 and 8 edges and 8 vertices
-  for (int x = 0; x < w; ++x) 
-    for (int y = 0; y < h; ++y) {
-      Label l = getv<LabelImage3>(image, x, y, 0);
-      if (l != BGVAL || includeBG) bmap[l].push_back(Point3(x, y, 0));
-      l = getv<LabelImage3>(image, x, y, zmax);
-      if (l != BGVAL || includeBG) bmap[l].push_back(Point3(x, y, zmax));
+  int x, y, z;
+  // x = 0, y = 0: h - 1, z = 0: d - 1
+  x = 0;
+  for (y = 0; y < h; ++y)
+    for (z = 0; z < d; ++z) {
+      Label l = getv<LabelImage3>(image, x, y, z);
+      if (l != BGVAL || includeBG) bmap[l].push_back(Point3(x, y, z));
     }
-  // y = 0 and y = h - 1 and 4 edges
-  for (int x = 0; x < w; ++x)
-    for (int z = 1; z < zmax; ++z) {
-      Label l = getv<LabelImage3>(image, x, 0, z);
-      if (l != BGVAL || includeBG) bmap[l].push_back(Point3(x, 0, z));
-      l = getv<LabelImage3>(image, x, ymax, z);
-      if (l != BGVAL || includeBG) bmap[l].push_back(Point3(x, ymax, z));
+  // x = 1: w - 2, y = 0, z = 0: d - 1
+  y = 0;
+  for (x = 1; x < w - 1; ++x) 
+    for (z = 0; z < d; ++z) {
+      Label l = getv<LabelImage3>(image, x, y, z);
+      if (l != BGVAL || includeBG) bmap[l].push_back(Point3(x, y, z));
     }
-  // x = 0 and x = w - 1
-  for (int y = 1; y < ymax; ++y)
-    for (int z = 1; z < zmax; ++z) {
-      Label l = getv<LabelImage3>(image, 0, y, z);
-      if (l != BGVAL || includeBG) bmap[l].push_back(Point3(0, y, z));
-      l = getv<LabelImage3>(image, xmax, y, z);
-      if (l != BGVAL || includeBG) bmap[l].push_back(Point3(xmax, y, z));
+  // x = 1: w - 2, y = 1: h - 2, z = 0
+  z = 0;
+  for (x = 1; x < w - 1; ++x) 
+    for (y = 1; y < h - 1; ++y) {
+      Label l = getv<LabelImage3>(image, x, y, z);
+      if (l != BGVAL || includeBG) bmap[l].push_back(Point3(x, y, z));
+    }
+  // x = 1: w - 2, y = 1: h - 2, z = d - 1
+  z = d - 1;
+  for (x = 1; x < w - 1; ++x) 
+    for (y = 1; y < h - 1; ++y) {
+      Label l = getv<LabelImage3>(image, x, y, z);
+      if (l != BGVAL || includeBG) bmap[l].push_back(Point3(x, y, z));
+    }
+  // x = 1: w - 2, y = h - 1, z = 0: d - 1
+  y = h - 1;
+  for (x = 1; x < w - 1; ++x) 
+    for (z = 0; z < d; ++z) {
+      Label l = getv<LabelImage3>(image, x, y, z);
+      if (l != BGVAL || includeBG) bmap[l].push_back(Point3(x, y, z));
+    }
+  // x = w - 1, y = 0: h - 1, z = 0: d - 1
+  x = w - 1;
+  for (y = 0; y < h; ++y) 
+    for (z = 0; z < d; ++z) {
+      Label l = getv<LabelImage3>(image, x, y, z);
+      if (l != BGVAL || includeBG) bmap[l].push_back(Point3(x, y, z));
     }
 }

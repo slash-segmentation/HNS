@@ -1,13 +1,13 @@
 #include "util/ml/ml_rf.h"
+using namespace rf;
 
 void writePredictionToFile (const char* predFileName, double* votes, 
 			    int N, int nclass, int classNo, int ntree)
 {
   std::ofstream fs(predFileName);
   if (fs.is_open()) {
-    for (int i = 0; i < N; i++) {
+    for (int i = 0; i < N; i++) 
       fs << votes[i * nclass + classNo] / (double)ntree << std::endl;
-    }
     fs.close();
   }
   else {

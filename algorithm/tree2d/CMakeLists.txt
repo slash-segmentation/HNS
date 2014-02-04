@@ -90,6 +90,14 @@ target_link_libraries(chooseWatershedThreshold
   gmp gmpxx 
   ${ITK_LIBRARIES})
 
+add_executable(isTreeEqual
+  main_isTreeEqual.cxx 
+  tree2d_util.cxx
+  ../util/struct_util.cxx
+  ../struct/point.cxx)
+target_link_libraries(isTreeEqual
+  ${ITK_LIBRARIES})
+
 # add_executable(segmentToContours 
 #   main_segmentToContours.cxx 
 #   tree2d_util.cxx

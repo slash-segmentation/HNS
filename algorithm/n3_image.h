@@ -26,6 +26,7 @@ namespace n3 {
   typedef itk::Image<Float, IMG_DIM3> FloatImage3;
   typedef itk::Image<UInt8, IMG_DIM3> UInt8Image3;
   typedef itk::Image<UInt16, IMG_DIM3> UInt16Image3;
+  typedef itk::Image<Rgb8, IMG_DIM3> Rgb8Image3;
 
   typedef itk::Size<IMG_DIM3> ImageSize3;
   typedef itk::Index<IMG_DIM3> ImageIndex3;

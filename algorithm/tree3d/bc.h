@@ -12,6 +12,8 @@ namespace n3 {
        Consider: body 0 + body 1 -> body 2
 
        Unordered geometry: 
+         touch border 0
+	 touch border 1
          vol 0 (V0)
 	 vol 1 (V1 >= V0)
 	 vol diff (dV01 = |V1 - V0|)
@@ -69,33 +71,41 @@ namespace n3 {
          sub saliency 0 (S0)
 	 sub saliency 1 (S1)
 	 sup saliency (S2)
-	 saliency abs inc 0 (dS0 = |S2 - S0|)
-	 saliency abs inc 1 (dS1 = |S2 - S1|)
+	 saliency inc 0 (dS0 = S2 - S0)
+	 saliency inc 1 (dS1 = S2 - S1)
 	 saliency inc abs diff (|dS0 - dS1|)
     */
 
-    void getUnorderedGeometryFeatures (flist& feat, Points3 const* r0, 
-				       Points3 const* r1, 
-				       Points3 const* c0, 
-				       Points3 const* c1, 
-				       Points3 const* uc, bool swap01);
+    void getBoundaryUnorderedGeometryFeatures 
+      (flist& feat, Points3 const* r0, Points3 const* r1, 
+       Points3 const* c0, Points3 const* c1, Points3 const* ub, 
+       Points3 const* b0, Points3 const* b1, bool swap01);
 
-    void getIntensityFeatures (flist& feat, Points3 const& p, 
-			       FloatImage3::Pointer valImage, 
-			       float histLower, float histUpper, 
-			       int histBin);
+    void getBoundaryIntensityFeatures (flist& feat, Points3 const& p, 
+				       FloatImage3::Pointer valImage, 
+				       float histLower, float histUpper, 
+				       int histBin);
 
-    void getIntensityFeatures (flist& feat, Points3 const& p0, 
-			       Points3 const& p1, 
-			       FloatImage3::Pointer valImage, 
-			       float histLower, float histUpper, 
-			       int histBin);
+    void getBoundaryIntensityFeatures (flist& feat, Points3 const& p0, 
+				       Points3 const& p1, 
+				       FloatImage3::Pointer valImage, 
+				       float histLower, float histUpper, 
+				       int histBin);
 
-    void getTextonFeatures (flist& feat, Points3 const& p0, 
-			    Points3 const& p1, 
-			    FloatImage3::Pointer valImage, 
-			    TextonDict const& tdict, 
-			    LabelImage3::Pointer canvas);
+    void getBoundaryTextonFeatures (flist& feat, Points3 const& p0, 
+				    Points3 const& p1, 
+				    FloatImage3::Pointer valImage, 
+				    TextonDict const& tdict, 
+				    LabelImage3::Pointer canvas);
+
+    // Does not include saliency features
+    void getBoundaryFeatures (flist& feat, Points3 const* r0, 
+			      Points3 const* r1, Points3 const* uc0, 
+			      Points3 const* uc1, Points3 const* b0, 
+			      Points3 const* b1, 
+			      LabelImage3::Pointer canvas, 
+			      FloatImage3::Pointer rawImage, 
+			      FloatImage3::Pointer pbImage);
 
   };
 

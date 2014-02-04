@@ -63,7 +63,7 @@ void operation (const char* resImageName, const char* initSegImageName,
 
 int main (int argc, char* argv[])
 {
-  if (argc < 4 || argc > 7) {
+  if (argc < 5 || argc > 7) {
     std::cerr << "Usage: " << argv[0]
 	      << " initialSegmentationImageName" 
 	      << " treeFileName" 

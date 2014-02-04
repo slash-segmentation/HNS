@@ -80,7 +80,7 @@ void n3::Points::get_curve_angles (flist& a, bool closed) const
     ++it0;
     it1 = begin();
     ++it2;
-    a.push_back(it1->get_curve_angle(*it0, *it2));
+    a.push_front(it1->get_curve_angle(*it0, *it2));
   }
 }
 

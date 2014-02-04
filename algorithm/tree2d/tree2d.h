@@ -19,13 +19,23 @@ namespace n3 {
       : from0(from0), from1(from1), to(to) {}
       
       bool operator < (Merge const& merge) const {return data < merge.data;}
-
-      friend std::ostream& operator << 
-      (std::ostream& os, Merge<T> const& merge) {
-	os << "from0 = " << merge.from0 << ", from1 = " << merge.from1 
-	   << ", to = " << merge.to << ", data = {" << merge.data 
+      
+      void print (std::ostream& os) {
+	os << "from0 = " << from0 << ", from1 = " << from1 
+	   << ", to = " << to << ", data = {" << data 
 	   << "}";
+      }
+
+      friend std::ostream& operator << (std::ostream& os, 
+					Merge<T> const& merge) {
+	os << merge.from0 << " " << merge.from1 << " "
+	   << merge.to << " " << merge.data << " ";
 	return os;
+      }
+
+      friend std::istream& operator >> (std::istream& is, Merge<T>& merge) {
+	is >> merge.from0 >> merge.from1 >> merge.to >> merge.data;
+	return is;
       }
 
     };

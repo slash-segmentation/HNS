@@ -74,14 +74,15 @@ void operation (std::vector<const char*> const& outputImageNames,
     std::vector<const char*>::const_iterator oit = outputImageNames.begin();
     while (iit != inputImageNames.end()) {
       LabelImage::Pointer inputImage = readImage<LabelImage>(*iit);
+      LabelImage::Pointer resImage = 
+	labelConnectedComponents<LabelImage, LabelImage>
+	(inputImage, bgVal, isFullyConnected, true, 0);
       if (write16)
-	writeImage<UInt16Image>
-	  (*oit, labelConnectedComponents<LabelImage, UInt16Image>
-	   (inputImage, bgVal, isFullyConnected, false, 0));
+	writeImage<UInt16Image>(*oit, relabelImage<LabelImage, 
+				UInt16Image>(resImage));
       else 
-	writeImage<LabelImage>
-	  (*oit, labelConnectedComponents<LabelImage, LabelImage>
-	   (inputImage, bgVal, isFullyConnected, false, 0));
+	writeImage<LabelImage>(*oit, relabelImage<LabelImage, 
+			       LabelImage>(resImage));
       ++iit;
       ++oit;
     }
@@ -91,23 +92,28 @@ void operation (std::vector<const char*> const& outputImageNames,
     if (inputImageNames.size() == 1) 
       inputImage = readImage<LabelImage3>(inputImageNames[0]);
     else inputImage = readImage<LabelImage3>(inputImageNames);
+    LabelImage3::Pointer resImage = 
+      labelConnectedComponents<LabelImage3, LabelImage3>
+      (inputImage, bgVal, isFullyConnected, true, 0);
     if (write16) {
-      UInt16Image3::Pointer resImage = 
-	labelConnectedComponents<LabelImage3, UInt16Image3>
-	(inputImage, bgVal, isFullyConnected, false, 0);
       if (outputImageNames.size() == 1)
-	writeImage<UInt16Image3>(outputImageNames[0], resImage);
+	writeImage<UInt16Image3>(outputImageNames[0], 
+				 relabelImage<LabelImage3, 
+				 UInt16Image3>(resImage));
       else 
-	writeImage<UInt16Image3, UInt16Image>(outputImageNames, resImage);
+	writeImage<UInt16Image3, UInt16Image>(outputImageNames, 
+					      relabelImage<LabelImage3, 
+					      UInt16Image3>(resImage));
     }
     else {
-      LabelImage3::Pointer resImage = 
-	labelConnectedComponents<LabelImage3, LabelImage3>
-	(inputImage, bgVal, isFullyConnected, false, 0);
       if (outputImageNames.size() == 1)
-	writeImage<LabelImage3>(outputImageNames[0], resImage);
+	writeImage<LabelImage3>(outputImageNames[0], 
+				relabelImage<LabelImage3, 
+				LabelImage3>(resImage));
       else 
-	writeImage<LabelImage3, LabelImage>(outputImageNames, resImage);
+	writeImage<LabelImage3, LabelImage>(outputImageNames, 
+					    relabelImage<LabelImage3, 
+					    LabelImage3>(resImage));
     }
   }
 }

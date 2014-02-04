@@ -1,4 +1,5 @@
 #include "ml_rf.h"
+using namespace rf;
 
 const int MIN_SPARSE_SIZE = 128;
 
@@ -70,7 +71,7 @@ void readArray (T*& data, std::ifstream& fs, int size)
 
 
 
-void writeModelToTextFile (const char* fileName, Model const& model)
+void rf::writeModelToTextFile (const char* fileName, Model const& model)
 {
   std::ofstream fs(fileName);
   if (fs.is_open()) {
@@ -270,7 +271,7 @@ void writeModelToTextFile (const char* fileName, Model const& model)
 
 
 
-void readModelFromTextFile (Model& model, const char* fileName)
+void rf::readModelFromTextFile (Model& model, const char* fileName)
 {
   std::ifstream fs(fileName);
   if (fs.is_open()) {
@@ -420,7 +421,7 @@ void readModelFromTextFile (Model& model, const char* fileName)
 
 
 
-void deleteModel (Model& model)
+void rf::deleteModel (Model& model)
 {
   for (std::vector<double*>::iterator itr = 
 	 model.orig_uniques_in_feature.begin(); 
@@ -490,7 +491,7 @@ void deleteModel (Model& model)
 
 
 
-void printModel (Model const& model)
+void rf::printModel (Model const& model)
 {
   std::cout << "ncat: " << std::endl;
   std::cout << "\tsize = [" << model.n_ncat[0] << " " 
@@ -725,354 +726,7 @@ void printModel (Model const& model)
 
 
 
-// void writeModelToBinaryFile (const char* fileName, Model const& model)
-// {
-//   std::ofstream fs(fileName, std::ios::out | std::ios::binary);
-//   if (fs.is_open()) {
-//     fs.write((char*)&model, sizeof(model));
-//     if (model.n_orig_uniques_in_feature.size() > 0) {
-//       fs.write((char*)&model.n_orig_uniques_in_feature.front(), 
-// 	       sizeof(int) * model.n_orig_uniques_in_feature.size());
-//       for (int i = 0; i < model.n_orig_uniques_in_feature.size(); i++) {
-// 	if (model.n_orig_uniques_in_feature[i] > 0) {
-// 	  fs.write((char*)model.orig_uniques_in_feature[i], 
-// 		   sizeof(double) * model.n_orig_uniques_in_feature[i]);
-// 	}
-//       }
-//     }
-//     if (model.n_mapped_uniques_in_feature.size() > 0) {
-//       fs.write((char*)model.n_mapped_uniques_in_feature.front(), 
-// 	       sizeof(int) * model.n_mapped_uniques_in_feature.size());
-//       for (int i = 0; i < model.n_mapped_uniques_in_feature.size(); i++) {
-// 	if (model.n_mapped_uniques_in_feature[i] > 0) {
-// 	  fs.write((char*)model.mapped_uniques_in_feature[i], 
-// 		   sizeof(double) * model.n_mapped_uniques_in_feature[i]);
-// 	}
-//       }
-//     }
-//     if (model.n_ncat[0] * model.n_ncat[1] > 0) {
-//       fs.write((char*)model.ncat, 
-//       	       sizeof(int) * model.n_ncat[0] * model.n_ncat[1]);
-//     }
-//     if (model.n_categorical_feature[0] 
-// 	* model.n_categorical_feature[1] > 0) {
-//       fs.write((char*)model.categorical_feature, 
-//       	       sizeof(int) * model.n_categorical_feature[0] 
-//       	       * model.n_categorical_feature[1]);
-//     }
-//     if (model.n_xbestsplit[0] * model.n_xbestsplit[1] > 0) {
-//       fs.write((char*)model.xbestsplit, 
-//       	       sizeof(double) * model.n_xbestsplit[0] 
-//       	       * model.n_xbestsplit[1]);
-//     }
-//     if (model.n_classwt[0] * model.n_classwt[1] > 0) {
-//       fs.write((char*)model.classwt, 
-// 	       sizeof(double) * model.n_classwt[0] * model.n_classwt[1]);
-//     }
-//     if (model.n_cutoff[0] * model.n_cutoff[1] > 0) {
-//       fs.write((char*)model.cutoff, 
-// 	       sizeof(double) * model.n_cutoff[0] * model.n_cutoff[1]);
-//     }
-//     if (model.n_treemap[0] * model.n_treemap[1] > 0) {
-//       fs.write((char*)model.treemap, 
-// 	       sizeof(int) * model.n_treemap[0] * model.n_treemap[1]);
-//     }
-//     if (model.n_nodestatus[0] * model.n_nodestatus[1] > 0) {
-//       fs.write((char*)model.nodestatus, sizeof(int) 
-// 	       * model.n_nodestatus[0] * model.n_nodestatus[1]);
-//     }
-//     if (model.n_nodeclass[0] * model.n_nodeclass[1] > 0) {
-//       fs.write((char*)model.nodeclass, 
-// 	       sizeof(int) * model.n_nodeclass[0] * model.n_nodeclass[1]);
-//     }
-//     if (model.n_bestvar[0] * model.n_bestvar[1] > 0) {
-//       fs.write((char*)model.bestvar, 
-// 	       sizeof(int) * model.n_bestvar[0] * model.n_bestvar[1]);
-//     }
-//     if (model.n_ndbigtree[0] * model.n_ndbigtree[1] > 0) {
-//       fs.write((char*)model.ndbigtree, 
-// 	       sizeof(int) * model.n_ndbigtree[0] * model.n_ndbigtree[1]);
-//     }
-//     if (model.n_orig_labels[0] * model.n_orig_labels[1] > 0) {
-//       fs.write((char*)model.orig_labels, 
-// 	       sizeof(int) * model.n_orig_labels[0] * 
-// 	       model.n_orig_labels[1]);
-//     }
-//     if (model.n_new_labels[0] * model.n_new_labels[1] > 0) {
-//       fs.write((char*)model.new_labels, 
-// 	       sizeof(int) * model.n_new_labels[0] * 
-// 	       model.n_new_labels[1]);
-//     }
-//     if (model.n_outcl[0] * model.n_outcl[1] > 0) {
-//       fs.write((char*)model.outcl, 
-// 	       sizeof(int) * model.n_outcl[0] * model.n_outcl[1]);
-//     }
-//     if (model.n_outclts[0] * model.n_outclts[1] > 0) {
-//       fs.write((char*)model.outclts, 
-// 	       sizeof(int) * model.n_outclts[0] * model.n_outclts[1]);
-//     }
-//     if (model.n_counttr[0] * model.n_counttr[1] > 0) {
-//       fs.write((char*)model.counttr, 
-// 	       sizeof(int) * model.n_counttr[0] * model.n_counttr[1]);
-//     }
-//     if (model.n_proximity[0] * model.n_proximity[1] > 0) {
-//       fs.write((char*)model.proximity, 
-// 	       sizeof(double) * model.n_proximity[0] 
-// 	       * model.n_proximity[1]);
-//     }
-//     if (model.n_proximity_tst[0] * model.n_proximity_tst[1] > 0) {
-//       fs.write((char*)model.proximity_tst, 
-// 	       sizeof(double) * model.n_proximity_tst[0] 
-// 	       * model.n_proximity_tst[1]);
-//     }
-//     if (model.n_localImp[0] * model.n_localImp[1] > 0) {
-//       fs.write((char*)model.localImp, 
-//     	       sizeof(double) * model.n_localImp[0] * model.n_localImp[1]);
-//     }
-//     if (model.n_importance[0] * model.n_importance[1] > 0) {
-//       fs.write((char*)model.importance, 
-//     	       sizeof(double) * model.n_importance[0] 
-// 	       * model.n_importance[1]);
-//     }
-//     if (model.n_importanceSD[0] * model.n_importanceSD[1] > 0) {
-//       fs.write((char*)model.importanceSD, 
-//     	       sizeof(double) * model.n_importanceSD[0] 
-// 	       * model.n_importanceSD[1]);
-//     }
-//     if (model.n_errtr[0] * model.n_errtr[1] > 0) {
-//       fs.write((char*)model.errtr, 
-//     	       sizeof(double) * model.n_errtr[0] * model.n_errtr[1]);
-//     }
-//     if (model.n_errts[0] * model.n_errts[1] > 0) {
-//       fs.write((char*)model.errts, 
-//     	       sizeof(double) * model.n_errts[0] * model.n_errts[1]);
-//     }
-//     if (model.n_inbag[0] * model.n_inbag[1] > 0) {
-//       fs.write((char*)model.inbag, 
-//     	       sizeof(int) * model.n_inbag[0] * model.n_inbag[1]);
-//     }
-//     if (model.n_votes[0] * model.n_votes[1] > 0) {
-//       fs.write((char*)model.votes, 
-//     	       sizeof(int) * model.n_votes[0] * model.n_votes[1]);
-//     }
-//     if (model.n_oob_times[0] * model.n_oob_times[1] > 0) {
-//       fs.write((char*)model.oob_times, 
-//     	       sizeof(int) * model.n_oob_times[0] * model.n_oob_times[1]);
-//     }
-//     fs.close();
-//   }
-//   else {
-//     std::cerr << "Error creating model file..." << std::endl;
-//     exit(0);
-//   }
-// }
-
-
-
-// void readModelFromBinaryFile (Model& model, const char* fileName)
-// {
-//   std::ifstream fs(fileName, std::ios::in | std::ios::binary);
-//   if (fs.is_open()) {
-//     fs.read((char*)&model, sizeof(Model));
-//     int size = model.n_orig_uniques_in_feature.size();
-//     if (size > 0) {
-//       model.n_orig_uniques_in_feature.resize(size);
-//       fs.read((char*)&model.n_orig_uniques_in_feature.front(), 
-// 	      sizeof(int) * size);
-//       for (int i = 0; i < size; i++) {
-// 	int size2 = model.n_orig_uniques_in_feature[i];
-// 	if (size2 > 0) {
-// 	  model.orig_uniques_in_feature[i] = new double[size2];
-// 	  fs.read((char*)model.orig_uniques_in_feature[i], 
-// 		  sizeof(double) * size2);
-// 	}
-// 	else model.orig_uniques_in_feature[i] = NULL;
-//       }
-//     }
-//     else { 
-//       model.n_orig_uniques_in_feature.clear();
-//       model.orig_uniques_in_feature.clear();
-//     }
-//     size = model.n_mapped_uniques_in_feature.size();
-//     if (size > 0) {
-//       model.n_mapped_uniques_in_feature.resize(size);
-//       fs.read((char*)&model.n_mapped_uniques_in_feature.front(), 
-// 	      sizeof(int) * size);
-//       for (int i = 0; i < size; i++) {
-// 	int size2 = model.n_mapped_uniques_in_feature[i];
-// 	if (size2 > 0) {
-// 	  model.mapped_uniques_in_feature[i] = new int[size2];
-// 	  fs.read((char*)model.mapped_uniques_in_feature[i], 
-// 		  sizeof(int) * size2);
-// 	}
-// 	else model.mapped_uniques_in_feature[i] = NULL;
-//       }
-//     }
-//     else { 
-//       model.n_mapped_uniques_in_feature.clear();
-//       model.mapped_uniques_in_feature.clear();
-//     }
-//     size = model.n_ncat[0] * model.n_ncat[1];
-//     if (size > 0) {
-//       model.ncat = new int[size];
-//       fs.read((char*)model.ncat, sizeof(int) * size);
-//     }
-//     else model.ncat = NULL;
-//     size = model.n_categorical_feature[0] * model.n_categorical_feature[1];
-//     if (size > 0) {
-//       model.categorical_feature = new int[size];
-//       fs.read((char*)model.categorical_feature, sizeof(int) * size);
-//     }
-//     else model.categorical_feature = NULL;
-//     size = model.n_xbestsplit[0] * model.n_xbestsplit[1];
-//     if (size > 0) {
-//       model.xbestsplit = new double[size];
-//       fs.read((char*)model.xbestsplit, sizeof(double) * size);
-//     }
-//     else model.xbestsplit = NULL;
-//     size = model.n_classwt[0] * model.n_classwt[1];
-//     if (size > 0) {
-//       model.classwt = new double[size];
-//       fs.read((char*)model.classwt, sizeof(double) * size);
-//     }
-//     else model.classwt = NULL;
-//     size = model.n_cutoff[0] * model.n_cutoff[1];
-//     if (size > 0) {
-//       model.cutoff = new double[size];
-//       fs.read((char*)model.cutoff, sizeof(double) * size);
-//     }
-//     else model.cutoff = NULL;
-//     size = model.n_treemap[0] * model.n_treemap[1];
-//     if (size > 0) {
-//       model.treemap = new int[size];
-//       fs.read((char*)model.treemap, sizeof(int) * size);
-//     }
-//     else model.treemap = NULL;
-//     size = model.n_nodestatus[0] * model.n_nodestatus[1];
-//     if (size > 0) {
-//       model.nodestatus = new int[size];
-//       fs.read((char*)model.nodestatus, sizeof(int) * size);
-//     }
-//     else model.nodestatus = NULL;
-//     size = model.n_nodeclass[0] * model.n_nodeclass[1];
-//     if (size > 0) {
-//       model.nodeclass = new int[size];
-//       fs.read((char*)model.nodeclass, sizeof(int) * size);
-//     }
-//     else model.nodeclass = NULL;
-//     size = model.n_bestvar[0] * model.n_bestvar[1];
-//     if (size > 0) {
-//       model.bestvar = new int[size];
-//       fs.read((char*)model.bestvar, sizeof(int) * size);
-//     }
-//     else model.bestvar = NULL;
-//     size = model.n_ndbigtree[0] * model.n_ndbigtree[1];
-//     if (size > 0) {
-//       model.ndbigtree = new int[size];
-//       fs.read((char*)model.ndbigtree, sizeof(int) * size);
-//     }
-//     else model.ndbigtree = NULL;
-//     size = model.n_orig_labels[0] * model.n_orig_labels[1];
-//     if (size > 0) {
-//       model.orig_labels = new int[size];
-//       fs.read((char*)model.orig_labels, sizeof(int) * size);
-//     }
-//     else model.orig_labels = NULL;
-//     size = model.n_new_labels[0] * model.n_new_labels[1];
-//     if (size > 0) {
-//       model.new_labels = new int[size];
-//       fs.read((char*)model.new_labels, sizeof(int) * size);
-//     }
-//     else model.new_labels = NULL;
-//     size = model.n_outcl[0] * model.n_outcl[1];
-//     if (size > 0) {
-//       model.outcl = new int[size];
-//       fs.read((char*)model.outcl, sizeof(int) * size);
-//     }
-//     else model.outcl = NULL;
-//     size = model.n_outclts[0] * model.n_outclts[1];
-//     if (size > 0) {
-//       model.outclts = new int[size];
-//       fs.read((char*)model.outclts, sizeof(int) * size);
-//     }
-//     else model.outclts = NULL;
-//     size = model.n_counttr[0] * model.n_counttr[1];
-//     if (size > 0) {
-//       model.counttr = new int[size];
-//       fs.read((char*)model.counttr, sizeof(int) * size);
-//     }
-//     else model.counttr = NULL;
-//     size = model.n_proximity[0] * model.n_proximity[1];
-//     if (size > 0) {
-//       model.proximity = new double[size];
-//       fs.read((char*)model.proximity, sizeof(double) * size);
-//     }
-//     else model.proximity = NULL;
-//     size = model.n_proximity_tst[0] * model.n_proximity_tst[1];
-//     if (size > 0) {
-//       model.proximity_tst = new double[size];
-//       fs.read((char*)model.proximity_tst, sizeof(double) * size);
-//     }
-//     else model.proximity_tst = NULL;
-//     size = model.n_localImp[0] * model.n_localImp[1];
-//     if (size > 0) {
-//       model.localImp = new double[size];
-//       fs.read((char*)model.localImp, sizeof(double) * size);
-//     }
-//     else model.localImp = NULL;
-//     size = model.n_importance[0] * model.n_importance[1];
-//     if (size > 0) {
-//       model.importance = new double[size];
-//       fs.read((char*)model.importance, sizeof(double) * size);
-//     }
-//     else model.importance = NULL;
-//     size = model.n_importanceSD[0] * model.n_importanceSD[1];
-//     if (size > 0) {
-//       model.importanceSD = new double[size];
-//       fs.read((char*)model.importanceSD, sizeof(double) * size);
-//     }
-//     else model.importanceSD = NULL;
-//     size = model.n_errtr[0] * model.n_errtr[1];
-//     if (size > 0) {
-//       model.errtr = new double[size];
-//       fs.read((char*)model.errtr, sizeof(double) * size);
-//     }
-//     else model.errtr = NULL;
-//     size = model.n_errts[0] * model.n_errts[1];
-//     if (size > 0) {
-//       model.errts = new double[size];
-//       fs.read((char*)model.errts, sizeof(double) * size);
-//     }
-//     else model.errts = NULL;
-//     size = model.n_inbag[0] * model.n_inbag[1];
-//     if (size > 0) {
-//       model.inbag = new int[size];
-//       fs.read((char*)model.inbag, sizeof(int) * size);
-//     }
-//     else model.inbag = NULL;
-//     size = model.n_votes[0] * model.n_votes[1];
-//     if (size > 0) {
-//       model.votes = new int[size];
-//       fs.read((char*)model.votes, sizeof(int) * size);
-//     }
-//     else model.votes = NULL;
-//     size = model.n_oob_times[0] * model.n_oob_times[1];
-//     if (size > 0) {
-//       model.oob_times = new int[size];
-//       fs.read((char*)model.oob_times, sizeof(int) * size);
-//     }
-//     else model.oob_times = NULL;
-//     fs.close();
-//   }
-//   else {
-//     std::cerr << "Error reading model file..." << std::endl;
-//     exit(0);
-//   }
-// }
-
-
-
-void writeModelToBinaryFile (const char* fileName, Model const& model)
+void rf::writeModelToBinaryFile (const char* fileName, Model const& model)
 {
   std::ofstream fs(fileName, std::ios::binary);
   if (fs.is_open()) {
@@ -1152,7 +806,7 @@ void writeModelToBinaryFile (const char* fileName, Model const& model)
 
 
 
-void readModelFromBinaryFile (Model& model, const char* fileName)
+void rf::readModelFromBinaryFile (Model& model, const char* fileName)
 {
   std::ifstream fs(fileName, std::ios::binary);
   if (fs.is_open()) {

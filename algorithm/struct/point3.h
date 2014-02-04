@@ -23,14 +23,34 @@ namespace n3 {
       return (float)sqrt(dx * dx + dy * dy + dz * dz);
     }
 
+    float get_curve_angle (Point3 const& ppre, Point3 const& pnext) const {
+      double vx10 = x - ppre.x, vy10 = y - ppre.y, vz10 = z - ppre.z;
+      double vx21 = pnext.x - x, vy21 = pnext.y - y, vz21 = pnext.z - z;
+      double den = sqrt(vx10 * vx10 + vy10 * vy10 + vz10 * vz10) * 
+	sqrt(vx21 * vx21 + vy21 * vy21 + vz21 * vz21);
+      double num = vx10 * -vx21 + vy10 * -vy21 + vz10 * -vz21;
+      double r = num / den;
+      if (r > 1.0) r = 1.0;
+      else if (r < -1.0) r = -1.0;
+      return acos(r);
+    }
+
     bool operator == (Point3 const& p) const {
       return (fabs(x - p.x) < EPSILON && fabs(y - p.y) < EPSILON 
 	      && fabs(z - p.z) < EPSILON);
     }
 
+    Point3 operator + (Point3 const& p) const {
+      return Point3(x + p.x, y + p.y, z + p.z);
+    }
+
     Point3 operator - (Point3 const& p) {
       return Point3(x - p.x, y - p.y, z - p.z);
     }
+
+    Point3 operator / (double r) const {
+      return Point3(x / r, y / r, z / r);
+    } 
 
     bool operator < (Point3 const& p) const {
       return x < p.x || (x == p.x && (y < p.y || y == p.y && z < p.z));
@@ -46,9 +66,13 @@ namespace n3 {
       return os;
     }
 
-    friend std::istream& operator << (std::istream& is, Point3& p) {
+    friend std::istream& operator >> (std::istream& is, Point3& p) {
       is >> p.x >> p.y >> p.z;
       return is;
+    }
+
+    void print (std::ostream& os) const {
+      os << "(" << x << ", " << y << ", " << z << ")";
     }
 
   };
@@ -187,17 +211,35 @@ namespace n3 {
     void reverse () {body.reverse();}
 
     friend std::ostream& operator << (std::ostream& os, Points3 const& p) {
-      Points3::const_iterator it = p.begin();
-      while (it != p.end()) {
-	os << *it;
-	++it;
-	if (it != p.end()) os << " ";
-      }
+      os << p.size() << " ";
+      for (const_iterator pit = p.begin(); pit != p.end(); ++pit) 
+	os << *pit << " ";
       return os;
+    }
+
+    friend std::istream& operator >> (std::istream& is, Points3& p) {
+      int n;
+      is >> n;
+      for (int i = 0; i < n; ++i) {
+	Point3 pt;
+	is >> pt;
+	p.push_back(pt);
+      }
+      return is;
+    }
+
+    void print (std::ostream& os) const {
+      for (const_iterator it = begin(); it != end(); ++it) {
+	it->print(os);
+	os << " ";
+      }
     }
 
     /* Get centroid of all points */
     Point3 get_centroid () const;
+
+    // Assume all points are in order
+    void get_curve_angles (flist& a, bool closed) const;
 
     /* Get bounding box */
     Box3 get_box () const;
@@ -227,7 +269,7 @@ namespace n3 {
       }
 
       friend std::istream& operator >> (std::istream& is, Pixel3<T>& p) {
-	is >> p.x >> " " >> p.y >> " " >> p.z >> " " >> p.val;
+	is >> p.x >> p.y >> p.z >> p.val;
 	return is;
       }
       

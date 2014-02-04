@@ -14,9 +14,6 @@ void operation (const char* featFileName, const char* labelImageName,
 		std::vector<const char*> const& valImageNames, 
 		const char* tdictFileName)
 {
-  // // For debug
-  // time_t local = time(0);
-  // // ~ For debug
   LabelImage3::Pointer labelImage = readImage<LabelImage3>(labelImageName);
   std::vector<FloatImage3::Pointer> valImages;
   valImages.reserve(valImageNames.size());
@@ -24,42 +21,20 @@ void operation (const char* featFileName, const char* labelImageName,
 	 valImageNames.begin(); nit != valImageNames.end(); ++nit) 
     valImages.push_back(readImage<FloatImage3>(*nit));
   LabelImage3::Pointer canvas = createImage<LabelImage3>(labelImage, 0);
-  // // For debug
-  // std::cerr << "loading images took " << difftime(time(0), local) 
-  // 	    << std::endl;
-  // local = time(0);
-  // // ~ For debug
   TextonDict tdict;
   if (tdictFileName != NULL) 
     readTexton(tdict, tdictFileName, TEXTON_PAT_LEN3);
-  // // For debug
-  // std::cerr << "loading texton dict took " << difftime(time(0), local) 
-  // 	    << std::endl;
-  // local = time(0);
-  // // ~ For debug
   std::list<fMerge> merges;
   readMerges(merges, treeFileName, saliencyFileName);
   fTree tree;
   getTree(tree, merges, &assignDouble);
   updateLeafSaliencies(tree, 0.0);
-  // // For debug
-  // std::cerr << "loading tree took " << difftime(time(0), local) 
-  // 	    << std::endl;
-  // local = time(0);
-  // // ~ For debug
   PointMap3 rmap, cmap;
   PointLabelMap3 lmap;
   getPointMap(rmap, lmap, cmap, labelImage, CRCONN3, false, true);
-  // Add border points!
+  // Use border points for geometry features!
   PointMap3 bmap;
   getBorderPoints(bmap, labelImage, false);
-  for (PointMap3::iterator bit = bmap.begin(); bit != bmap.end(); ++bit) 
-    merge(cmap.find(bit->first)->second, bit->second, false);
-  // // For debug
-  // std::cerr << "generating flat rmap/cmap took " 
-  // 	    << difftime(time(0), local) << std::endl;
-  // local = time(0);
-  // // ~ For debug
   std::list<flist> feats;
   int N = tree.size(), n = 1;
   for (fTree::const_iterator pa = tree.begin(); pa != tree.end(); ++pa) {
@@ -70,49 +45,38 @@ void operation (const char* featFileName, const char* labelImageName,
       Points3 const* r1 = &(rmap.find(ch1->label)->second);
       Points3 const* uc0 = &(cmap.find(ch0->label)->second);
       Points3 const* uc1 = &(cmap.find(ch1->label)->second);
+      PointMap3::const_iterator bit0 = bmap.find(ch0->label), 
+	bit1 = bmap.find(ch1->label);
       Points3 ub;
       getBoundary(ub, *uc0, *uc1, canvas);
       bool swap01 = r0->size() > r1->size();
       feats.push_back(flist());
-      getUnorderedGeometryFeatures(feats.back(), r0, r1, uc0, uc1, &ub, 
-				   swap01);
+      getBoundaryUnorderedGeometryFeatures
+	(feats.back(), r0, r1, uc0, uc1, &ub, 
+	 bit0 == bmap.end()? NULL: &(bit0->second), 
+	 bit1 == bmap.end()? NULL: &(bit1->second), swap01);
       if (valImageNames[IM_RAW] != NULL) 
-	getIntensityFeatures(feats.back(), ub, valImages[IM_RAW], 
-			     0.0, 1.0, BC_RI_HIST_BIN);
+	getBoundaryIntensityFeatures(feats.back(), ub, valImages[IM_RAW], 
+				     0.0, 1.0, BC_RI_HIST_BIN);
       if (tdictFileName != NULL) 
-	getTextonFeatures(feats.back(), *r0, *r1, valImages[IM_RAW], 
-			  tdict, canvas);
+	getBoundaryTextonFeatures(feats.back(), *r0, *r1, 
+				  valImages[IM_RAW], tdict, canvas);
       if (valImageNames[IM_PB] != NULL) 
-	getIntensityFeatures(feats.back(), ub, valImages[IM_PB], 
-			     0.0, 1.0, BC_PB_HIST_BIN);
+	getBoundaryIntensityFeatures(feats.back(), ub, valImages[IM_PB], 
+				     0.0, 1.0, BC_PB_HIST_BIN);
       if (saliencyFileName != NULL)
 	getSaliencyFeatures(feats.back(), ch0->data, ch1->data, 
 			    pa->data, swap01);
-      // // For debug
-      // std::cerr << "generating feature (" << ch0->label << ", " 
-      // 		<< ch1->label << ") [" << r0->size() << ", " 
-      // 		<< r1->size() << ", " << uc0->size() << ", " 
-      // 		<< uc1->size() << ", " << ub.size() << "] took " 
-      // 		<< difftime(time(0), local) 
-      // 		<< " [" << n << "/" << N << "]" << std::endl;
-      // local = time(0);
-      // // ~ For debug
-      // Modify rmap and cmap -- not keep source
-      merge(rmap, cmap, lmap, ch0->label, ch1->label, pa->label, 
-	    true, false); 
-      // // For debug
-      // std::cerr << "merging (" << ch0->label << ", " 
-      // 		<< ch1->label << ") took " 
-      // 		<< difftime(time(0), local) << std::endl;
-      // local = time(0);
-      // // ~ For debug
+      // Modify rmap, cmap and bmap -- not keep source
+      merge(rmap, cmap, lmap, bmap, ch0->label, ch1->label, pa->label, 
+	    true, false);
     }
-    // For display
+    // // For display
     // if (n % 200 == 0 || n > N - 3)
     // 	std::cerr << featFileName << " (" << n << "/" << N << ")"
     // 		  << std::endl;
-    ++n;
-    // For display
+    // ++n;
+    // // ~ For display
   }
   write2(featFileName, feats, false, ' ', '\n');
 }

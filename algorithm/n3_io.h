@@ -179,10 +179,40 @@ namespace n3 {
       for (int i = 0; i < n; ++i) {
 	int m = -1;
 	is >> m;
-	data.push_back(std::vector<TVal>(m));
+	data.insert(data.end(), std::vector<TVal>(m));
 	for (int j = 0; j < m; ++j) is >> data[i][j];
       }
     }
+
+
+  /* Read in a container of containers */
+  /* Each row is an element of outer container */
+  /* Need to know row # and col # */
+  template <typename TContainer> void 
+    read2 (TContainer& data, std::istream& is, int nrow, int ncol) 
+    {
+      for (int i = 0; i < nrow; ++i) {
+	data.insert(data.end(), typename TContainer::value_type());
+	for (int j = 0; j < ncol; ++j) {
+	  typename TContainer::value_type::value_type v;
+	  is >> v;
+	  data.back().insert(data.back().end(), v);
+	}
+      }
+    }
+
+
+  /* Read in a container of containers */
+  /* Each row is an element of outer container */
+  template <typename TContainer> void 
+    read2 (TContainer& data, const char* file) {
+    std::ifstream fs(file);
+    if (fs.is_open()) {
+      read2(data, fs, getr(file), getc(file));
+      fs.close();
+    }
+    else perr("Error: cannot read file...");
+  }
   
 };
 

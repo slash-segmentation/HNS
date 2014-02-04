@@ -1,4 +1,5 @@
 #include "util/ml/ml_rf.h"
+using namespace rf;
 
 void operation (const char* modelFileName, 
 		std::vector<const char*> featFileNames, 
@@ -58,9 +59,9 @@ int main (int argc, char* argv[])
     std::cerr << "Usage: " << argv[0]
 	      << " {-f featureFileName}" 
 	      << " {-l labelFileName}" 
-	      << " treeNum [0 for default]"
-	      << " mtry [0 for default]" 
-	      << " sampsizeRatio [0 for default]"
+	      << " treeNum (0 for default: 500)"
+	      << " mtry (0 for default: sqrt(D))" 
+	      << " sampleRate (0 for default: 1)"
 	      << " isBalanceClass"
 	      << " modelFileName" 
 	      << std::endl;

@@ -72,6 +72,11 @@ add_executable(relabelImage
 target_link_libraries(relabelImage 
   ${ITK_LIBRARIES})
 
+add_executable(relabelImage3 
+  main_relabelImage3.cxx)
+target_link_libraries(relabelImage3 
+  ${ITK_LIBRARIES})
+
 add_executable(blurImage 
   main_blurImage.cxx)
 target_link_libraries(blurImage 
@@ -186,3 +191,34 @@ add_executable(testConnectivity
   ../struct/point3.cxx)
 target_link_libraries(testConnectivity
   ${ITK_LIBRARIES})
+
+add_executable(removeExclusiveGaps3 
+  main_removeExclusiveGaps3.cxx)
+target_link_libraries(removeExclusiveGaps3
+  ${ITK_LIBRARIES})
+
+add_executable(binaryThinning
+  main_binaryThinning.cxx 
+  ../util/cv/cv_ma.cxx
+  ../util/cv/cv_curve.cxx
+  ../util/cv/cv_curve3.cxx
+  ../struct/point.cxx 
+  ../struct/point3.cxx)
+target_link_libraries(binaryThinning 
+  ${ITK_LIBRARIES} 
+  ${OpenCV_LIBS})
+
+add_executable(genMedialAxisGraphVis 
+  main_genMedialAxisGraphVis.cxx 
+  ../util/cv/cv_ma.cxx
+  ../util/cv/cv_curve.cxx
+  ../util/cv/cv_curve3.cxx
+  ../struct/point.cxx
+  ../struct/point3.cxx)
+target_link_libraries(genMedialAxisGraphVis
+  ${ITK_LIBRARIES}
+  ${OpenCV_LIBS})
+
+add_executable(unique 
+  main_unique.cxx 
+  ../n3_io.cxx)

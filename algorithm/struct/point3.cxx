@@ -21,6 +21,31 @@ Point3 n3::Points3::get_centroid () const
 
 
 
+// Assume all points are in order
+void n3::Points3::get_curve_angles (flist& a, bool closed) const
+{
+  if (size() < 3) return;
+  const_iterator it0 = begin();
+  const_iterator it1 = it0; ++it1;
+  const_iterator it2 = it1; ++it2;
+  while (it2 != end()) {
+    a.push_back(it1->get_curve_angle(*it0, *it2));
+    ++it0;
+    ++it1;
+    ++it2;
+  }
+  if (closed) {
+    it2 = begin();
+    a.push_back(it1->get_curve_angle(*it0, *it2));
+    ++it0;
+    it1 = begin();
+    ++it2;
+    a.push_front(it1->get_curve_angle(*it0, *it2));
+  }
+}
+
+
+
 // Get bounding box
 Box3 n3::Points3::get_box () const
 {

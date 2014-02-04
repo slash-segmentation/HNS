@@ -98,7 +98,7 @@ void operation (const char* resImageName, const char* initSegImageName,
 
 int main (int argc, char* argv[])
 {
-  if (argc < 5) {
+  if (argc < 7) {
     std::cerr << "Usage: " << argv[0] 
 	      << " initialSegmentationImageName" 
 	      << " {-t treeFileName}"

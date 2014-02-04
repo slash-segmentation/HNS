@@ -118,7 +118,7 @@ void operation (std::vector<const char*> const& resImageNames,
 	for (int j = 0; j < n; ++j)
 	  thresholded[j] = labelConnectedComponents<LabelImage, LabelImage>
 	    (thresholdImage<FloatImage, LabelImage>
-	     (resImages[j], lowerBound, threshold, 1, 0), 0, false);
+	     (resImages[j], lowerBound, threshold, 1, 0), 0, false, true);
 	std::vector<BigInt> tps(n), tns(n), fps(n), fns(n);
 #pragma omp parallel for 
 	for (int j = 0; j < n; ++j)
@@ -183,7 +183,7 @@ void operation (std::vector<const char*> const& resImageNames,
 	LabelImage3::Pointer thresholded = 
 	  labelConnectedComponents<LabelImage3, LabelImage3>
 	  (thresholdImage<FloatImage3, LabelImage3>
-	   (resImage, lowerBound, threshold, 1, 0), 0, false);
+	   (resImage, lowerBound, threshold, 1, 0), 0, false, true);
 	BigInt tp = 0, tn = 0, fp = 0, fn = 0;
 	getPairScores(tp, tn, fp, fn, thresholded, refImage);
 	BigFloat prec = getPrecision(tp, fp), rec = getRecall(tp, fn);

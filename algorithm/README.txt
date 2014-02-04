@@ -5,7 +5,7 @@ Ting Liu (ting@sci.utah.edu)
 
 
 Reference: 
-If you use this code, please refer to our paper: 
+If you use our code, please refer to our paper: 
 
 @inproceedings{liu2012watershed,
   title={Watershed merge tree classification for electron microscopy image segmentation},

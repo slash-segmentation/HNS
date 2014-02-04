@@ -1,8 +1,12 @@
 function write_tiff (name, vol)
-if isa(vol, 'float')
+if isa(vol, 'single')
     op.SampleFormat = Tiff.SampleFormat.IEEEFP;
     op.BitsPerSample = 32;
     vol = single(vol);
+elseif isa(vol, 'double')
+    op.SampleFormat = Tiff.SampleFormat.IEEEFP;
+    op.BitsPerSample = 64;
+    vol = double(vol);
 elseif isa(vol, 'uint16')
     op.SampleFormat = Tiff.SampleFormat.UInt;
     op.BitsPerSample = 16;

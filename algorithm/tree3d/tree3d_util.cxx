@@ -92,6 +92,7 @@ LabelImage3::Pointer n3::tree3d::merge (LabelImage3::Pointer labelImage,
   labelImage->FillBuffer(BGVAL);
   for (PointMap3::const_iterator it = rmap.begin(); it != rmap.end(); 
        ++it) setvs<LabelImage3>(labelImage, it->second, it->first);
+  return labelImage;
 }
 
 
@@ -165,7 +166,8 @@ void n3::tree3d::getBoundaryTable (BoundaryTable3& bt, MergeQueue& mq,
 				   FloatImage3::Pointer valImage)
 {
   getBoundaryTable(bt, lmap, valImage);
-  for (BoundaryTable3::iterator tit = bt.begin(); tit != bt.end(); ++tit)
+  for (BoundaryTable3::const_iterator tit = bt.begin(); 
+       tit != bt.end(); ++tit)
     mq.push(fMerge(tit->first.first, tit->first.second, 0, 
 		   getSaliency(tit->second)));
 }
@@ -173,23 +175,25 @@ void n3::tree3d::getBoundaryTable (BoundaryTable3& bt, MergeQueue& mq,
 
 
 // Assume r01 is greater than any existing region label
-void n3::tree3d::updateBoundaryTable (BoundaryTable3& bt, MergeQueue& mq, 
-				      std::set<LabelPair>& removed, 
+// Use mq = NULL to skip updating it
+// Use removed = NULL to skip collecting removed label pairs
+void n3::tree3d::updateBoundaryTable (BoundaryTable3& bt, MergeQueue* mq, 
+				      std::set<LabelPair>* removed, 
 				      Label r0, Label r1, Label r01)
 {
   if (r0 > r1) std::swap(r0, r1); // Keep r0 < r1
-  removed.insert(std::make_pair(r0, r1));
+  if (removed != NULL) removed->insert(std::make_pair(r0, r1));
   bt.erase(std::make_pair(r0, r1));
   std::list<BoundaryTable3::iterator> erm; // Entries to remove
   std::map<Label, std::list<fPixel3> > neighbors;
   for (BoundaryTable3::iterator it = bt.begin(); it != bt.end(); ++it) 
     if (it->first.first == r0 || it->first.first == r1) {
-      removed.insert(it->first);
+      if (removed != NULL) removed->insert(it->first);
       erm.push_back(it);
       merge(neighbors[it->first.second], it->second, false);
     }
     else if (it->first.second == r0 || it->first.second == r1) {
-      removed.insert(it->first);
+      if (removed != NULL) removed->insert(it->first);
       erm.push_back(it);
       merge(neighbors[it->first.first], it->second, false);
     }
@@ -198,11 +202,47 @@ void n3::tree3d::updateBoundaryTable (BoundaryTable3& bt, MergeQueue& mq,
 	 neighbors.begin(); nit != neighbors.end(); ++nit) {
     LabelPair lp = std::make_pair(nit->first, r01);
     std::list<fPixel3>* pp = &(bt[lp]);
-    merge(*pp, nit->second, true);
-    mq.push(fMerge(lp.first, lp.second, 0, getSaliency(*pp)));
+    splice(*pp, nit->second, true);
+    if (mq != NULL) 
+      mq->push(fMerge(lp.first, lp.second, 0, getSaliency(*pp)));
   }
 }
 
+
+
+// // Assume r01 is greater than any existing region label
+// // Use mq = NULL to skip updating it
+// // Use removed = NULL to skip collecting removed label pairs
+// void n3::tree3d::updateBoundaryTable2 (BoundaryTable3& bt, MergeQueue* mq, 
+// 				       std::set<LabelPair>* removed, 
+// 				       Label r0, Label r1, Label r01)
+// {
+//   if (r0 > r1) std::swap(r0, r1); // Keep r0 < r1
+//   if (removed != NULL) removed->insert(std::make_pair(r0, r1));
+//   bt.erase(std::make_pair(r0, r1));
+//   std::list<BoundaryTable3::iterator> erm; // Entries to remove
+//   std::map<Label, std::list<fPixel3>*> neighbors;
+//   for (BoundaryTable3::iterator it = bt.begin(); it != bt.end(); ++it) 
+//     if (it->first.first == r0 || it->first.first == r1) {
+//       if (removed != NULL) removed->insert(it->first);
+//       erm.push_back(it);
+//       neighbors[it->first.second] = &(it->second);
+//     }
+//     else if (it->first.second == r0 || it->first.second == r1) {
+//       if (removed != NULL) removed->insert(it->first);
+//       erm.push_back(it);
+//       neighbors[it->first.first] = &(it->second);
+//     }
+//   for (std::map<Label, std::list<fPixel3> >::iterator nit = 
+// 	 neighbors.begin(); nit != neighbors.end(); ++nit) {
+//     LabelPair lp = std::make_pair(nit->first, r01);
+//     std::list<fPixel3>* pp = &(bt[lp]);
+//     merge(*pp, nit->second, true);
+//     if (mq != NULL) 
+//       mq->push(fMerge(lp.first, lp.second, 0, getSaliency(*pp)));
+//   }
+//   remove(bt, erm); // Remove all entries related to r0/r1
+// }
 
 
 // Merge from rfrom to rto
@@ -254,29 +294,29 @@ void n3::tree3d::getMerges (std::list<fMerge>& merges, Points3 const& bp,
 			    LabelImage3::Pointer labelImage, 
 			    FloatImage3::Pointer valImage)
 {
-  // For debug
-  time_t local = time(0);
-  // ~ For debug
+  // // For debug
+  // time_t local = time(0);
+  // // ~ For debug
   PointLabelMap3 lmap;
   getPointNeighbors(lmap, bp, labelImage, CRCONN3);
-  // For debug
-  std::cerr << "generating lmap took " 
-	    << difftime(time(0), local) / 60.0 << std::endl;
-  local = time(0);
-  // ~ For debug
+  // // For debug
+  // std::cerr << "generating lmap took " 
+  // 	    << difftime(time(0), local) / 60.0 << std::endl;
+  // local = time(0);
+  // // ~ For debug
   BoundaryTable3 bt;
   MergeQueue mq;
   getBoundaryTable(bt, mq, lmap, valImage);
-  // For debug
-  std::cerr << "generating bt took " 
-	    << difftime(time(0), local) / 60.0 << std::endl;
-  local = time(0);
-  // ~ For debug
+  // // For debug
+  // std::cerr << "generating bt took " 
+  // 	    << difftime(time(0), local) / 60.0 << std::endl;
+  // local = time(0);
+  // // ~ For debug
   std::set<LabelPair> removed;
   Label r01 = getMaxLabel(lmap) + 1;
-  // For debug
-  local = time(0);
-  // ~ For debug
+  // // For debug
+  // local = time(0);
+  // // ~ For debug
   while (mq.size() > 0) {
     fMerge m = mq.top();
     mq.pop();
@@ -284,16 +324,17 @@ void n3::tree3d::getMerges (std::list<fMerge>& merges, Points3 const& bp,
       removed.find(std::make_pair(m.from0, m.from1));
     if (rit == removed.end()) {
       Label r0 = m.from0, r1 = m.from1;
-      updateBoundaryTable(bt, mq, removed, r0, r1, r01);
-      // Saliency = -median; but store median (not saliency) in a merge
+      updateBoundaryTable(bt, &mq, &removed, r0, r1, r01);
+      // Saliency = -median
+      // But store median (not real saliency) in a merge
       merges.push_back(fMerge(r0, r1, r01, -(m.data)));
       merge(NULL, lmap, r0, r1, r01);
       ++r01;
-      // For debug
-      std::cerr << "generated a merge (" << r0 << ", " << r1 << ") took" 
-		<< difftime(time(0), local) << std::endl;
-      local = time(0);
-      // ~ For debug
+      // // For debug
+      // std::cerr << "generated a merge (" << r0 << ", " << r1 << ") took" 
+      // 		<< difftime(time(0), local) << std::endl;
+      // local = time(0);
+      // // ~ For debug
     }
     else removed.erase(rit);
   }
@@ -314,7 +355,7 @@ void n3::tree3d::getMerges (std::list<fMerge>& merges,
 
 void n3::tree3d::getBoundary (Points3& boundary, Points3 const& contour0, 
 			      Points3 const& contour1, 
-			      LabelImage3::Pointer& canvas)
+			      LabelImage3::Pointer canvas)
 {
   canvas->FillBuffer(0);
   setvs<LabelImage3>(canvas, contour0, 1);

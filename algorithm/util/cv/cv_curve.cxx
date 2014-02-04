@@ -16,8 +16,10 @@ void n3::smoothCurve (Points& po, Points const& pi, double sigma,
     int i = 0;
     Points::const_iterator iit = pi.begin();
     while (iit != pi.end()) {
-      int dpre = (!closed && i - radius < 0? i: radius);
-      int dpost = (!closed && i + radius >= n? n - i - 1: radius);
+      int dpre_max = (!closed && i - radius < 0? i: radius);
+      int dpost_max = (!closed && i + radius >= n? n - i - 1: radius);
+      int dpre = std::min(dpre_max, dpost_max);
+      int dpost = dpre;
       int len = dpost + dpre + 1;
       double x[len], y[len], w[len], wsum = 0.0;
       Points::const_iterator endpos = pi.end(); --endpos; // Last point
@@ -72,6 +74,44 @@ void n3::smoothCurve (std::vector<Points>& po,
     splice(po.back(), p, false);
   }
 }
+
+
+
+// Smooth out sharp angles smaller than threshold ([0, PI])
+void n3::smoothSharpCurve (Points& po, double threshold, bool closed)
+{
+  if (po.size() < 3) return;
+  Points::iterator iit0, iit1, iit2;
+  if (closed) {
+    iit0 = po.end(); --iit0;
+    iit1 = po.begin(); 
+    iit2 = iit1; ++iit2;
+  }
+  else {
+    iit0 = po.begin();
+    iit1 = iit0; ++iit1;
+    iit2 = iit1; ++iit2;
+  }
+  bool repeat = true;
+  while (repeat) {
+    repeat = false;
+    flist angles;
+    po.get_curve_angles(angles, closed);
+    flist::const_iterator ait = angles.begin();
+    while (ait != angles.end()) {
+      if (*ait < threshold) {
+	repeat = true;
+	*iit1 = ((*iit0 + *iit2) / 2.0 + *iit1) / 2.0;
+      }
+      ++ait;
+      iit0 = iit1;
+      iit1 = iit2;
+      ++iit2;
+      if (closed && iit2 == po.end()) iit2 = po.begin();
+    }
+  }
+}
+
 
 
 

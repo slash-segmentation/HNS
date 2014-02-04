@@ -79,8 +79,8 @@ namespace n3 {
          sub saliency 0 (S0)
 	 sub saliency 1 (S1)
 	 sup saliency (S2)
-	 saliency abs inc 0 (dS0 = |S2 - S0|)
-	 saliency abs inc 1 (dS1 = |S2 - S1|)
+	 saliency inc 0 (dS0 = S2 - S0)
+	 saliency inc 1 (dS1 = S2 - S1)
 	 saliency inc abs diff (|dS0 - dS1|)
 
      */

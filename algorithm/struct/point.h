@@ -87,6 +87,10 @@ namespace n3 {
       return is;
     }
 
+    void print (std::ostream& os) const {
+      os << "(" << x << ", " << y << ")";
+    }
+
   };
 
 
@@ -245,13 +249,28 @@ namespace n3 {
     void reverse () {body.reverse();}
 
     friend std::ostream& operator << (std::ostream& os, Points const& p) {
-      Points::const_iterator it = p.begin();
-      while (it != p.end()) {
-	os << *it;
-	++it;
-	if (it != p.end()) os << " ";
-      }
+      os << p.size() << " ";
+      for (const_iterator pit = p.begin(); pit != p.end(); ++pit) 
+	os << *pit << " ";
       return os;
+    }
+
+    friend std::istream& operator >> (std::istream& is, Points& p) {
+      int n;
+      is >> n;
+      for (int i = 0; i < n; ++i) {
+	Point pt;
+	is >> pt;
+	p.push_back(pt);
+      }
+      return is;
+    }
+
+    void print (std::ostream& os) const {
+      for (const_iterator it = begin(); it != end(); ++it) {
+	it->print(os);
+	os << " ";
+      }
     }
 
     /* Get centroid of all points */
@@ -371,7 +390,7 @@ namespace n3 {
 
     
     friend std::istream& operator >> (std::istream& is, Pixel<T>& p) {
-      is >> p.x >> " " >> p.y >> " " >> p.val;
+      is >> p.x >> p.y >> p.val;
       return is;
     }
 

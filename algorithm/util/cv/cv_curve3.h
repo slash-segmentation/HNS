@@ -6,6 +6,15 @@
 
 namespace n3 {
 
+  // Input and output points are both in order
+  // To average a current point coordinate
+  // Use from previous int(3 * sigma) to next int(3 * sigma) points
+  void smoothCurve (Points3& po, Points3 const& pi, double sigma, 
+		    bool closed);
+
+  // Smooth out sharp angles smaller than threshold ([0, PI])
+  void smoothSharpCurve (Points3& po, double threshold, bool closed);
+
   // Fit a 3D line with given 3D points
   // line = (vx, vy, vz, x0, y0, z0)
   // (vx, vy, vz): directional vector; (x0, y0, z0): a point on line

@@ -19,6 +19,22 @@ namespace n3 {
     return v0 < v1;
   }
 
+  template <typename T> bool 
+    compContainer (T const& c0, T const& c1) {
+    if (c0.size() < c1.size()) return true;
+    else if (c0.size() == c1.size()) {
+      typename T::const_iterator cit0 = c0.begin(); 
+      typename T::const_iterator cit1 = c1.begin();
+      while (cit0 != c0.end()) {
+	if (*cit0 < *cit1) return true;
+	else if (*cit0 > *cit1) return false;
+	++cit0;
+	++cit1;
+      }
+    }
+    return false;
+  }
+
 
   /* Return total size of x, which is a container of container */
   template <typename T> unsigned int
@@ -30,7 +46,23 @@ namespace n3 {
       return ret;
     }
 
-  
+
+  /* Determine whether two containers' elemenets are exactly identical */
+  template <typename TContainer0, typename TContainer1> bool 
+    is_equal (TContainer0 const& c0, TContainer1 const& c1)
+    {
+      if (c0.size() != c1.size()) return false;
+      typename TContainer0::const_iterator it0 = c0.begin(); 
+      typename TContainer0::const_iterator it1 = c1.begin(); 
+      while (it0 != c0.end()) {
+	if (*it0 != *it1) return false;
+	++it0;
+	++it1;
+      } 
+      return true;
+    }
+
+
   /* Remove all iterators in r from m */
   template <typename T> void 
     remove (T& m, std::list<typename T::iterator> const& r)
@@ -103,6 +135,21 @@ namespace n3 {
     append(to, from1, unique);
   }
 
+  
+  /* If from0 and from1 are sorted, and need to to be sorted  */
+  /* Use sort = true */
+  template <typename TIn, typename TOut> void 
+    combine (TOut& to, TIn const& from0, TIn const& from1, bool unique, 
+	     bool sort) 
+  {
+    if (sort) {
+      to = from0.size() > from1.size()? from0: from1;
+      TIn t = from0.size() <= from1.size()? from0: from1;
+      merge(to, t, unique);
+    }
+    else combine(to, from0, from1, unique);
+  }
+
 
   template <typename TIn, typename TOut> void 
     splice (TOut& to, TIn& from, bool unique)
@@ -123,6 +170,31 @@ namespace n3 {
   }
 
 
+  /* /\* Simultaneously merge a number of containers *\/ */
+  /* template <typename TIn, typename TOut> void */
+  /*   merge (TOut& to, std::list<TIn*> const& froms, bool unique) */
+  /* { */
+  /*   std::list<std::pair<TIn*, typename TIn::iterator> > ps; */
+  /*   for (std::list<TIn*>::const_iterator fit = froms.begin(); */
+  /* 	 fit !=froms.end(); ++fit) { */
+  /*     typename TIn::iterator it = (*fit)->begin(); */
+  /*     if (it != (*fit)->end()) ps.push_back(std::make_pair(*fit, it)); */
+  /*   } */
+  /*   while (ps.size() > 1) { */
+  /*     std::list<std::pair<TIn*, typename TIn::iterator> >::iterator */
+  /* 	pp = ps.begin(); */
+  /*     for (std::list<std::pair<TIn*, typename TIn::iterator> >::iterator */
+  /* 	     pit = ps.begin(); pit != ps.end(); ++pit) */
+  /* 	if (*(pit->second) < *(pp->second)) pp = pit; */
+  /*     to.splice(to.end(), *(pp->first), pp->second); */
+  /*     ++(pp->second); */
+  /*     if (pp->second == pp->first->end()) ps.erase(pp); */
+  /*   } */
+  /*   if (!ps.empty()) to.splice(to.end(), *(ps.front().first)); */
+  /*   if (unique) to.unique(); */
+  /* } */
+
+
   template <typename TContainer> TContainer 
     add (TContainer const& v0, TContainer const& v1)
     {
@@ -139,6 +211,39 @@ namespace n3 {
       return ret;
     }
 
+
+  /* Compute union of two containers (e.g. std::map) */
+  /* Take sum of two values that share same key  */
+  template <typename TContainer> void 
+    add (TContainer& res, TContainer const& m0, TContainer const& m1)
+    {
+      typename TContainer::const_iterator it0 = m0.begin(); 
+      typename TContainer::const_iterator it1 = m1.begin(); 
+      while (it0 != m0.end() && it1 != m1.end())
+	if (it0->first < it1->first) {
+	  res.insert(res.end(), *it0);
+	  ++it0;
+	}
+	else if (it0->first == it1->first) {
+	  res.insert(res.end(), 
+		     std::make_pair(it0->first, 
+				    it0->second + it1->second));
+	  ++it0;
+	  ++it1;
+	}
+	else {
+	  res.insert(res.end(), *it1);
+	  ++it1;
+	}
+      while (it0 != m0.end()) {
+	res.insert(res.end(), *it0);
+	++it0;
+      }
+      while (it1 != m1.end()) {
+	res.insert(res.end(), *it1);
+	++it1;
+      }
+    }
 
 
   template <typename TContainer> TContainer 
@@ -259,16 +364,11 @@ namespace n3 {
     }
 
 
-
-
   template <typename TContainer> void 
-    print (TContainer const& data, char delim = '\n', 
-	   bool isStdOut = false) 
+    print (TContainer const& data, char delim, std::ostream& os) 
     {
       for (typename TContainer::const_iterator it = data.begin(); 
-	   it != data.end(); ++it) 
-	if (isStdOut) std::cout << *it << delim;
-	else std::cerr << *it << delim;
+	   it != data.end(); ++it) os << *it << delim;
     }
 
 

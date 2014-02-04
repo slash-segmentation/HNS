@@ -1,6 +1,9 @@
-function get_classifier_score (pred_probs, true_labels)
+function get_classifier_score (pred_probs, true_labels, threshold_interval)
+% pred_probs: predicted probabilities
+% true_labels: ground truth labels
+% threshold_interval: threshold interval
 
-for t = 0: 0.1: 1
+for t = 0: threshold_interval: 1
     lt = true_labels;
     lt(pred_probs >= t) = 1;
     lt(pred_probs < t) = -1;
