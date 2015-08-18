@@ -1,3 +1,0 @@
-[submodule "wrappers/py-seg-tools"]
-	path = wrappers/py-seg-tools
-	url = git@github.com:coderforlife/py-seg-tools.git
